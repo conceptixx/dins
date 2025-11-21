@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+# reworked 11-21-2025-22:13
+
 INSTALL_MARKER="/var/log/dins-install-complete"
 PAUSE_FLAG="/var/log/dins-wait-for-tty"
 
