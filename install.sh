@@ -73,7 +73,7 @@ start_install() {
       echo "WantedBy=multi-user.target"
     } | sudo tee "$WAKE_UNIT" > /dev/null
     sudo systemctl daemon-reexec
-    chmod 644 dins-wake.service
+    chmod 644 "$WAKE_UNIT"
     sudo systemctl daemon-reload
     sudo systemctl enable "$WAKE_UNIT" > /dev/null
   }
