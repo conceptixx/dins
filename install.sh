@@ -63,7 +63,7 @@ start_install() {
       echo "[Service]"
       echo "Type=oneshot"
       echo "User=pi"
-      echo "ExecStart=/bin/bash \"$SCRIPT_PATH\" --wake"
+      echo "ExecStart=/bin/bash /home/pi/install.sh --wake"
       echo "WorkingDirectory=/home/pi"
       echo "StandardOutput=journal+console"
       echo "StandardError=journal+console"
