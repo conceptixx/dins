@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# ==============================
+# ==============================+++
 # DINS INSTALLER - 3 PHASE SYSTEM
 # ==============================
 
@@ -75,7 +75,7 @@ start_install() {
     sudo systemctl daemon-reexec
     chmod 644 dins-wake.service
     sudo systemctl daemon-reload
-    sudo systemctl enable dins-wake.service > /dev/null
+    sudo systemctl enable "$WAKE_UNIT" > /dev/null
   }
 
 #  up_raspi
