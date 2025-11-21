@@ -12,7 +12,7 @@ fi
 if [ -f "$PAUSE_FLAG" ]; then
   echo "[DINS] Reboot complete - installation continues..."
   read -p "[DINS] Press ENTER to continue setup..." CONTINUE
-  rm -f "$PAUSE_FLAG"
+  sudo rm -f "$PAUSE_FLAG"
 fi
 
 echo "[DINS] Updating and upgrading Raspberry Pi OS silently..."
