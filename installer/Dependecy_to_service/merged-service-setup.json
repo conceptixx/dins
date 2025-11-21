@@ -1,0 +1,145 @@
+{
+  "compatibility": {
+    "recommended_pairs": {
+      "tailscale": [
+        "nginx",
+        "portainer",
+        "traefik"
+      ],
+      "nginx": [
+        "flask-audio",
+        "fastapi-audio",
+        "whisper",
+        "tts-ui"
+      ],
+      "home-assistant": [
+        "n8n",
+        "tts-ui",
+        "mqtt",
+        "rhasspy"
+      ],
+      "fastapi-audio": [
+        "gtts",
+        "mozilla-tts"
+      ],
+      "rhasspy": [
+        "pico-tts",
+        "vosk"
+      ],
+      "traefik": [
+        "docker-containers"
+      ],
+      "janus": [
+        "peerjs",
+        "mediasoup"
+      ],
+      "mqtt": [
+        "home-assistant",
+        "n8n"
+      ],
+      "mycroft": [
+        "mozilla-tts",
+        "deepspeech"
+      ]
+    },
+    "not_recommended_pairs": {
+      "nginx": [
+        "apache",
+        "caddy"
+      ],
+      "tailscale": [
+        "zerotier",
+        "wireguard"
+      ],
+      "whisper": [
+        "deepspeech"
+      ],
+      "multiple-vpn": [
+        "tailscale",
+        "zerotier",
+        "openvpn",
+        "pia"
+      ],
+      "multiple-stt": [
+        "whisper",
+        "vosk",
+        "kaldi-api",
+        "deepspeech",
+        "coqui-stt"
+      ],
+      "pulseaudio-containers": [
+        "coqui-tts",
+        "mozilla-tts"
+      ],
+      "ngrok": [
+        "cloudflare-tunnel"
+      ]
+    },
+    "compatible": {
+      "nginx": [
+        "flask-audio",
+        "ffmpeg-server",
+        "tts-ui"
+      ],
+      "nodejs": [
+        "socketio-audio",
+        "websocket-relay"
+      ],
+      "python": [
+        "whisper",
+        "vosk",
+        "fastapi-audio",
+        "pydub-server"
+      ],
+      "webrtc": [
+        "janus",
+        "jitsi",
+        "mediasoup"
+      ],
+      "mqtt": [
+        "n8n",
+        "home-assistant"
+      ],
+      "tts": [
+        "tts-ui",
+        "gtts",
+        "mozilla-tts",
+        "festival",
+        "opentts"
+      ],
+      "stt": [
+        "whisper",
+        "vosk",
+        "kaldi-api",
+        "wav2vec2"
+      ]
+    }
+  },
+  "dependencies": {
+    "ffmpeg": [
+      "whisper",
+      "fastapi-audio",
+      "ffmpeg-server"
+    ],
+    "python": [
+      "whisper",
+      "flask-audio",
+      "gtts",
+      "pydub-server"
+    ],
+    "webrtc": [
+      "janus",
+      "mediasoup",
+      "jitsi",
+      "obs-webrtc"
+    ],
+    "socket.io": [
+      "node-audio",
+      "socketio-audio"
+    ],
+    "mqtt": [
+      "home-assistant",
+      "n8n"
+    ]
+  }
+}

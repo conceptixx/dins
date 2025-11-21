@@ -1,0 +1,163 @@
+version: "3.9"
+
+# project/
+# ├── docker-compose-MOBILE.yml
+# └── mobile/
+#     ├── flutter/                   # Flutter web/mobile app
+#     ├── react-native/             # React Native WebRTC app
+#     ├── pwa/                      # Progressive Web App
+#     ├── ionic/                    # Ionic hybrid app container
+#     ├── webrtc-gateway/           # WebRTC SFU gateway
+#     ├── node-socket/              # Node.js WebSocket bridge
+#     ├── ws-client-python/         # Python WebSocket client
+#     ├── esp32-proxy/              # Simulated ESP32 audio bridge
+#     ├── peerjs/                   # PeerJS signaling server
+#     ├── jambonz/                  # Voice bridge platform
+#     ├── web-audio-api/            # JS audio recording frontend
+#     ├── dart-webrtc/              # Dart/Flutter WebRTC interface
+#     ├── tauri-webview/            # Tauri for mobile/desktop hybrid
+#     ├── exoplayer-ui/             # ExoPlayer audio control UI
+#     ├── rtp-client/               # Python RTP UDP audio client
+#     ├── audiorecorderjs/          # Browser mic capture
+#     ├── websocket-relay/          # Raw WebSocket stream pipe
+#     ├── audio-uploader/           # Chunked file upload app
+#     ├── mic-visualizer/           # Mobile mic-level monitor
+#     └── mobile-proxy-api/         # Gateway between UI and agents
+
+services:
+
+  flutter-app:
+    build: ./mobile/flutter
+    container_name: flutter-app
+    ports:
+      - "5200:5000"
+    restart: unless-stopped
+
+  react-native:
+    build: ./mobile/react-native
+    container_name: react-native-app
+    ports:
+      - "5201:3000"
+    restart: unless-stopped
+
+  pwa-app:
+    build: ./mobile/pwa
+    container_name: pwa
+    ports:
+      - "5202:8080"
+    restart: unless-stopped
+
+  ionic-app:
+    build: ./mobile/ionic
+    container_name: ionic-app
+    ports:
+      - "5203:8100"
+    restart: unless-stopped
+
+  webrtc-gateway:
+    build: ./mobile/webrtc-gateway
+    container_name: webrtc-gateway
+    ports:
+      - "5204:8443"
+    restart: unless-stopped
+
+  node-socket-server:
+    build: ./mobile/node-socket
+    container_name: node-socket
+    ports:
+      - "5205:3000"
+    restart: unless-stopped
+
+  ws-client-python:
+    build: ./mobile/ws-client-python
+    container_name: ws-client
+    restart: unless-stopped
+
+  esp32-proxy:
+    build: ./mobile/esp32-proxy
+    container_name: esp32-proxy
+    ports:
+      - "5206:4000"
+    restart: unless-stopped
+
+  peerjs:
+    image: peerjs/peerjs-server
+    container_name: peerjs
+    ports:
+      - "5207:9000"
+    restart: unless-stopped
+
+  jambonz:
+    image: jambonz/jambonz
+    container_name: jambonz
+    ports:
+      - "5208:3000"
+    restart: unless-stopped
+
+  web-audio-api:
+    build: ./mobile/web-audio-api
+    container_name: web-audio-api
+    ports:
+      - "5209:8080"
+    restart: unless-stopped
+
+  dart-webrtc:
+    build: ./mobile/dart-webrtc
+    container_name: dart-webrtc
+    ports:
+      - "5210:8081"
+    restart: unless-stopped
+
+  tauri-ui:
+    build: ./mobile/tauri-webview
+    container_name: tauri
+    ports:
+      - "5211:4000"
+    restart: unless-stopped
+
+  exoplayer-ui:
+    build: ./mobile/exoplayer-ui
+    container_name: exoplayer-ui
+    ports:
+      - "5212:8080"
+    restart: unless-stopped
+
+  rtp-client:
+    build: ./mobile/rtp-client
+    container_name: rtp-client
+    restart: unless-stopped
+
+  audiorecorderjs:
+    build: ./mobile/audiorecorderjs
+    container_name: audiorecorder
+    ports:
+      - "5213:8080"
+    restart: unless-stopped
+
+  websocket-relay:
+    build: ./mobile/websocket-relay
+    container_name: websocket-relay
+    ports:
+      - "5214:4001"
+    restart: unless-stopped
+
+  audio-uploader:
+    build: ./mobile/audio-uploader
+    container_name: audio-uploader
+    ports:
+      - "5215:5050"
+    restart: unless-stopped
+
+  mic-visualizer:
+    build: ./mobile/mic-visualizer
+    container_name: mic-visualizer
+    ports:
+      - "5216:3001"
+    restart: unless-stopped
+
+  mobile-proxy-api:
+    build: ./mobile/mobile-proxy-api
+    container_name: mobile-api
+    ports:
+      - "5217:4040"
+    restart: unless-stopped

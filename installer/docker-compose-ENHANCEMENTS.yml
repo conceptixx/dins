@@ -1,0 +1,218 @@
+version: "3.9"
+
+# project/
+# ├── docker-compose-ENHANCEMENTS.yml
+# └── enhancements/
+#     ├── stt/
+#     │   ├── whisper/                  # Whisper STT server
+#     │   ├── vosk/                     # Vosk speech-to-text
+#     │   ├── deepspeech/              # Mozilla DeepSpeech
+#     │   ├── coqui-stt/               # Coqui STT engine
+#     │   ├── espnet-stt/              # ESPnet ASR module
+#     │   ├── wav2vec2/                # HuggingFace Wav2Vec2 API
+#     │   ├── kaldi-api/               # Kaldi STT REST interface
+#     │   ├── sherpa-ncnn/             # Lightweight STT model
+#     │   └── transcription-ui/        # Minimal STT web UI
+#     ├── tts/
+#     │   ├── picotts/                 # Simple command-line TTS
+#     │   ├── espeak-ng/               # Lightweight speech engine
+#     │   ├── coqui-tts/               # Natural-sounding TTS
+#     │   ├── opentts/                 # Unified TTS platform
+#     │   ├── festival/                # Text-to-speech engine
+#     │   ├── mozilla-tts/             # Deep voice synthesis
+#     │   ├── gtts/                    # Google TTS wrapper
+#     │   └── tts-ui/                  # Simple voice test UI
+#     ├── ui/
+#     │   ├── agent-config-cli/        # Python CLI to toggle agents
+#     │   ├── agent-config-web/        # Web-based module configurator
+#     │   ├── portainer/               # Docker GUI manager
+#     │   ├── n8n/                     # Workflow automation (node-based)
+#     │   ├── home-assistant/          # Smart triggers and voice
+#     │   ├── mycroft/                 # Full AI assistant
+#     │   ├── rhasspy/                 # Offline modular voice stack
+#     │   └── jarvis/                  # Command-based VA
+#     │   └── automator/               # Minimal shell/script GUI
+#     │   └── control-panel/           # Lightweight container control panel
+
+services:
+
+  whisper:
+    build: ./enhancements/stt/whisper
+    container_name: whisper
+    ports:
+      - "5300:5000"
+    restart: unless-stopped
+
+  vosk:
+    image: alphacep/vosk-server
+    container_name: vosk
+    ports:
+      - "5301:2700"
+    restart: unless-stopped
+
+  deepspeech:
+    build: ./enhancements/stt/deepspeech
+    container_name: deepspeech
+    ports:
+      - "5302:5000"
+    restart: unless-stopped
+
+  coqui-stt:
+    build: ./enhancements/stt/coqui-stt
+    container_name: coqui-stt
+    ports:
+      - "5303:5000"
+    restart: unless-stopped
+
+  espnet-stt:
+    build: ./enhancements/stt/espnet
+    container_name: espnet-stt
+    ports:
+      - "5304:6006"
+    restart: unless-stopped
+
+  wav2vec2:
+    build: ./enhancements/stt/wav2vec2
+    container_name: wav2vec2
+    ports:
+      - "5305:5000"
+    restart: unless-stopped
+
+  kaldi-api:
+    build: ./enhancements/stt/kaldi
+    container_name: kaldi-api
+    ports:
+      - "5306:5010"
+    restart: unless-stopped
+
+  sherpa-ncnn:
+    image: csukuangfj/sherpa-ncnn
+    container_name: sherpa
+    ports:
+      - "5307:6000"
+    restart: unless-stopped
+
+  transcription-ui:
+    build: ./enhancements/stt/transcription-ui
+    container_name: transcription-ui
+    ports:
+      - "5308:8080"
+    restart: unless-stopped
+
+  picotts:
+    build: ./enhancements/tts/picotts
+    container_name: picotts
+    restart: unless-stopped
+
+  espeak-ng:
+    image: espeakng/espeakng
+    container_name: espeak-ng
+    restart: unless-stopped
+
+  coqui-tts:
+    build: ./enhancements/tts/coqui-tts
+    container_name: coqui-tts
+    ports:
+      - "5310:5002"
+    restart: unless-stopped
+
+  opentts:
+    build: ./enhancements/tts/opentts
+    container_name: opentts
+    ports:
+      - "5311:5500"
+    restart: unless-stopped
+
+  festival:
+    build: ./enhancements/tts/festival
+    container_name: festival
+    restart: unless-stopped
+
+  mozilla-tts:
+    build: ./enhancements/tts/mozilla
+    container_name: mozilla-tts
+    ports:
+      - "5312:5000"
+    restart: unless-stopped
+
+  gtts:
+    build: ./enhancements/tts/gtts
+    container_name: gtts
+    ports:
+      - "5313:5000"
+    restart: unless-stopped
+
+  tts-ui:
+    build: ./enhancements/tts/tts-ui
+    container_name: tts-ui
+    ports:
+      - "5314:8081"
+    restart: unless-stopped
+
+  agent-config-cli:
+    build: ./enhancements/ui/agent-config-cli
+    container_name: agent-cli
+    restart: unless-stopped
+
+  agent-config-web:
+    build: ./enhancements/ui/agent-config-web
+    container_name: agent-web
+    ports:
+      - "5315:4000"
+    restart: unless-stopped
+
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    ports:
+      - "5316:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n
+    container_name: n8n
+    ports:
+      - "5317:5678"
+    restart: unless-stopped
+
+  home-assistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: home-assistant
+    ports:
+      - "5318:8123"
+    restart: unless-stopped
+
+  mycroft:
+    image: mycroftai/mycroft
+    container_name: mycroft
+    restart: unless-stopped
+
+  rhasspy:
+    image: rhasspy/rhasspy
+    container_name: rhasspy
+    ports:
+      - "5319:12101"
+    restart: unless-stopped
+
+  jarvis:
+    build: ./enhancements/ui/jarvis
+    container_name: jarvis
+    ports:
+      - "5320:1337"
+    restart: unless-stopped
+
+  automator:
+    build: ./enhancements/ui/automator
+    container_name: automator
+    ports:
+      - "5321:5500"
+    restart: unless-stopped
+
+  control-panel:
+    build: ./enhancements/ui/control-panel
+    container_name: control-panel
+    ports:
+      - "5322:3000"
+    restart: unless-stopped

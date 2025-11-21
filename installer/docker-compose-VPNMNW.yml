@@ -1,0 +1,184 @@
+version: "3.9"
+
+services:
+  tailscale:
+    image: tailscale/tailscale
+    container_name: tailscale
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    network_mode: "host"
+    volumes:
+      - /dev/net/tun:/dev/net/tun
+      - tailscale-var-lib:/var/lib
+    environment:
+      - TS_AUTHKEY=your_auth_key
+    restart: unless-stopped
+
+  zerotier:
+    image: zerotier/zerotier
+    container_name: zerotier
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    devices:
+      - /dev/net/tun
+    restart: unless-stopped
+
+  wireguard:
+    image: linuxserver/wireguard
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ./config/wireguard:/config
+      - /lib/modules:/lib/modules
+    ports:
+      - "51820:51820/udp"
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+
+  openvpn:
+    image: kylemanna/openvpn
+    container_name: openvpn
+    volumes:
+      - ./config/openvpn:/etc/openvpn
+    ports:
+      - "1194:1194/udp"
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+
+  nebula:
+    image: slackhq/nebula
+    container_name: nebula
+    volumes:
+      - ./config/nebula:/etc/nebula
+    command: ["nebula", "-config", "/etc/nebula/config.yml"]
+    restart: unless-stopped
+
+  mysterium:
+    image: mysteriumnetwork/myst
+    container_name: mysterium
+    ports:
+      - "4449:4449"
+    volumes:
+      - mysterium-data:/var/lib/mysterium-node
+    restart: unless-stopped
+
+  softether:
+    image: siomiz/softethervpn
+    container_name: softether
+    ports:
+      - "500:500/udp"
+      - "4500:4500/udp"
+      - "1701:1701/tcp"
+      - "5555:5555/tcp"
+    environment:
+      - PSK=your_psk
+      - USERNAME=vpnuser
+      - PASSWORD=vpnpass
+    restart: unless-stopped
+
+  teleport:
+    image: gravitational/teleport
+    container_name: teleport
+    volumes:
+      - ./config/teleport:/etc/teleport
+    ports:
+      - "3022:3022"
+      - "3023:3023"
+      - "3025:3025"
+    restart: unless-stopped
+
+  protonvpn:
+    image: thrnz/docker-wireguard-pia
+    container_name: protonvpn
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    volumes:
+      - ./config/protonvpn:/config
+    environment:
+      - VPN_USER=your_username
+      - VPN_PASS=your_password
+    restart: unless-stopped
+
+  pia:
+    image: thrnz/docker-wireguard-pia
+    container_name: pia
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./config/pia:/pia
+    environment:
+      - PIA_USER=your_user
+      - PIA_PASS=your_pass
+    restart: unless-stopped
+
+  nordvpn:
+    image: bubuntux/nordvpn
+    container_name: nordvpn
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    environment:
+      - USER=your_user
+      - PASS=your_pass
+      - CONNECT=Germany
+    restart: unless-stopped
+
+  surfshark:
+    image: ghcr.io/swagio/surfshark
+    container_name: surfshark
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    environment:
+      - SURFSHARK_USER=your_user
+      - SURFSHARK_PASS=your_pass
+    restart: unless-stopped
+
+  expressvpn:
+    image: polkaned/expressvpn
+    container_name: expressvpn
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    environment:
+      - ACTIVATION_CODE=your_code
+    restart: unless-stopped
+
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=your_token
+    restart: unless-stopped
+
+  ngrok:
+    image: wernight/ngrok
+    container_name: ngrok
+    ports:
+      - "4040:4040"
+    environment:
+      - NGROK_AUTH=your_token
+      - NGROK_REGION=eu
+      - NGROK_PORT=22
+    restart: unless-stopped
+
+volumes:
+  tailscale-var-lib:
+  mysterium-data:

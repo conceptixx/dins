@@ -1,0 +1,126 @@
+version: "3.9"
+
+services:
+
+  nginx:
+    image: nginx:latest
+    container_name: web-nginx
+    ports:
+      - "8081:80"
+    volumes:
+      - ./web/nginx:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+  apache:
+    image: httpd:latest
+    container_name: web-apache
+    ports:
+      - "8082:80"
+    volumes:
+      - ./web/apache:/usr/local/apache2/htdocs:ro
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:latest
+    container_name: web-caddy
+    ports:
+      - "8083:80"
+      - "8443:443"
+    volumes:
+      - ./web/caddy:/usr/share/caddy
+      - ./web/caddy/Caddyfile:/etc/caddy/Caddyfile
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v2.10
+    container_name: web-traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "8084:80"
+      - "8080:8080"  # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  haproxy:
+    image: haproxy:latest
+    container_name: web-haproxy
+    ports:
+      - "8085:80"
+    volumes:
+      - ./web/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    restart: unless-stopped
+
+  envoy:
+    image: envoyproxy/envoy:v1.29-latest
+    container_name: web-envoy
+    ports:
+      - "8086:10000"
+    volumes:
+      - ./web/envoy/envoy.yaml:/etc/envoy/envoy.yaml
+    command: ["envoy", "-c", "/etc/envoy/envoy.yaml"]
+    restart: unless-stopped
+
+  kong:
+    image: kong:latest
+    container_name: web-kong
+    environment:
+      - KONG_DATABASE=off
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001
+    ports:
+      - "8087:8000"
+      - "8001:8001"
+    restart: unless-stopped
+
+  nginx-unit:
+    image: nginx/unit:1.31.0-minimal
+    container_name: web-unit
+    ports:
+      - "8088:80"
+    restart: unless-stopped
+
+  express-gateway:
+    image: express-gateway/express-gateway
+    container_name: web-eg
+    ports:
+      - "8089:8080"
+    restart: unless-stopped
+
+  openresty:
+    image: openresty/openresty:alpine
+    container_name: web-openresty
+    ports:
+      - "8090:80"
+    volumes:
+      - ./web/openresty:/usr/local/openresty/nginx/html:ro
+    restart: unless-stopped
+
+  tyk:
+    image: tykio/tyk-gateway
+    container_name: web-tyk
+    ports:
+      - "8091:8080"
+    environment:
+      - TYK_GW_SECRET=12345
+      - TYK_GW_LISTENPORT=8080
+      - TYK_GW_NODESECRET=abcdef
+    volumes:
+      - ./web/tyk:/opt/tyk-gateway
+    restart: unless-stopped
+
+  krakend:
+    image: devopsfaith/krakend
+    container_name: web-krakend
+    ports:
+      - "8092:8080"
+    volumes:
+      - ./web/krakend/krakend.json:/etc/krakend/krakend.json
+    command: ["run", "-c", "/etc/krakend/krakend.json"]
+    restart: unless-stopped

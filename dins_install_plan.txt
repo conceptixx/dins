@@ -1,0 +1,720 @@
+DINS – Distributed Intelligent Network Services
+================================================
+
+Ziel dieses Dokuments
+---------------------
+Dieses Dokument beschreibt einen **vollständigen Installations- und Aufbauplan** für DINS:
+
+- Ein verteiltes, intelligentes Sprach- und Automationssystem
+- Basierend auf:
+  - Einem **Master-Raspberry-Pi**: `dins-master`
+  - Mehreren **Client-Raspberry-Pis**: `dins-client01`, `dins-client02`, ...
+  - **Smartphones** (iPhone, später Android) als mobile Sprach-Frontends
+  - **Mikrofonarrays** an Pis:
+    - ReSpeaker 2-Mic HAT
+    - ReSpeaker 4-Mic Array (Round)
+    - ReSpeaker 4-Mic Linear Array
+    - ReSpeaker 8-Mic Array
+    - Generische USB-Mikrofone
+  - Einem **LLM-/STT-Server** (“Brain”) im selben Tailscale-Netz
+  - Optional Cloud-Fallback (OpenAI, Gemini, …)
+
+Alle Punkte sind als Checkliste aufgebaut:  
+Jeder Schritt beginnt mit `[__]`. Wenn du ihn erledigt hast, kannst du ihn zu `[OK]` ändern.
+
+Validierungsskripte (`validate_XX.sh`) werden **nicht** in dieser Datei definiert, sondern später im Chat für die jeweils erreichten Hauptpunkte bereitgestellt.
+
+
+0. Grundlegende Annahmen & Namensschema
+---------------------------------------
+
+[__] Projektname festgelegt: **DINS – Distributed Intelligent Network Services**
+
+[__] Hostnamen festgelegt:
+    - Master-Pi: `dins-master`
+    - Client-Pis: `dins-client01`, `dins-client02`, `dins-client03`, …
+
+[__] Basis-Annahmen:
+    - Raspberry Pi OS 64-bit (Bookworm oder neuer) auf allen Pis
+    - Zugang per SSH von einem MacBook (oder Linux-PC)
+    - Ein LLM-/STT-Server (Brain) ist später verfügbar (z. B. Linux-Workstation mit GPU)
+
+[__] Globale Platzhalter für eigene Notizen (bitte ausfüllen):
+    - DINS_MASTER_IP:  ___________
+    - DINS_CLIENT01_IP: _________
+    - DINS_CLIENT02_IP: _________
+    - BRAIN_HOST:       _________ (z. B. `brain` oder Tailscale-Name)
+    - PRIMARY_USERNAMES: (z. B. `user1`, `user2`, `child`, …)
+
+
+1. Basis-Setup auf Master & Clients
+-----------------------------------
+
+Ziel:
+- Alle Pis sind benannt, up-to-date und per SSH erreichbar.
+
+### 1.1 Hostnamen setzen
+
+Auf jedem Pi (lokal oder per SSH):
+
+[__] `dins-master`:
+    ```bash
+    sudo hostnamectl set-hostname dins-master
+    ```
+
+[__] `dins-client01`:
+    ```bash
+    sudo hostnamectl set-hostname dins-client01
+    ```
+
+[__] `dins-client02` (bei Bedarf):
+    ```bash
+    sudo hostnamectl set-hostname dins-client02
+    ```
+
+[__] `/etc/hosts` prüfen/ergänzen (auf jedem Pi):
+    ```bash
+    sudo nano /etc/hosts
+    ```
+    Einträge (Beispiel, IP anpassen):
+    ```
+    127.0.0.1   localhost
+    127.0.1.1   dins-master
+    # oder auf Clients:
+    # 127.0.1.1   dins-client01
+    ```
+
+[__] Reboot durchführen:
+    ```bash
+    sudo reboot
+    ```
+
+### 1.2 System-Updates und Basis-Pakete
+
+Auf jedem Pi:
+
+[__] System aktualisieren:
+    ```bash
+    sudo apt update
+    sudo apt full-upgrade -y
+    ```
+
+[__] Basis-Tools installieren:
+    ```bash
+    sudo apt install -y git curl htop tmux python3 python3-venv vim
+    ```
+
+[__] Optional: Zeitsynchronisation prüfen (für Logs und Zertifikate wichtig):
+    ```bash
+    timedatectl
+    ```
+
+
+2. SSH-Zugriff vom MacBook auf `dins-master` & Clients
+------------------------------------------------------
+
+Ziel:
+- Passwortloser SSH-Zugriff vom MacBook auf alle Pis.
+
+Auf dem MacBook:
+
+[__] SSH-Key erzeugen (falls keiner existiert):
+    ```bash
+    ls ~/.ssh/id_ed25519 ~/.ssh/id_rsa 2>/dev/null || \
+    ssh-keygen -t ed25519 -C "macbook-dins" -f ~/.ssh/id_ed25519
+    ```
+
+[__] Umgebungsvariablen (optional) im Terminal setzen:
+    ```bash
+    export DINS_MASTER=dins-master
+    export PI_USER=pi       # oder eigener Benutzername
+    ```
+
+[__] SSH-Key auf `dins-master` kopieren:
+    ```bash
+    ssh-copy-id "${PI_USER}@${DINS_MASTER}"
+    ```
+
+[__] SSH-Verbindung testen:
+    ```bash
+    ssh "${PI_USER}@${DINS_MASTER}" 'hostname && whoami && uname -a'
+    ```
+
+[__] (Optional) Keys auf Clients kopieren:
+    ```bash
+    ssh-copy-id "${PI_USER}@dins-client01"
+    ssh-copy-id "${PI_USER}@dins-client02"
+    ```
+
+
+3. Tailscale-Setup (Master, Clients, Smartphones, Brain)
+--------------------------------------------------------
+
+Ziel:
+- Alle relevanten Geräte sind im gleichen Tailnet.
+- iPhone kann später über Tailscale auf DINs-Weboberflächen und Audio-Gateway zugreifen.
+
+### 3.1 Tailscale auf `dins-master`
+
+[__] Installation:
+    ```bash
+    curl -fsSL https://tailscale.com/install.sh | sh
+    ```
+
+[__] Tailnet-Login:
+    ```bash
+    sudo tailscale up
+    ```
+    - Link auf einem Gerät mit Browser öffnen
+    - In Tailscale-Account einloggen
+    - Gerät zulassen
+
+[__] Status prüfen:
+    ```bash
+    tailscale status
+    ```
+
+### 3.2 Tailscale auf Clients (optional, empfohlen)
+
+[__] Auf `dins-client01`:
+    ```bash
+    curl -fsSL https://tailscale.com/install.sh | sh
+    sudo tailscale up
+    tailscale status
+    ```
+
+[__] Gleiches für `dins-client02`, `dins-client03`, …
+
+### 3.3 Tailscale auf Smartphones
+
+[__] iPhone: Tailscale-App aus App Store installieren
+[__] Mit demselben Tailnet-Account einloggen
+[__] Prüfen, ob `dins-master` als Node sichtbar ist
+
+### 3.4 Tailscale auf Brain (LLM-/STT-Server)
+
+[__] Auf dem Brain (Linux-Server):
+    ```bash
+    curl -fsSL https://tailscale.com/install.sh | sh
+    sudo tailscale up
+    tailscale status
+    ```
+
+[__] Brain im Tailnet sichtbar machen und Namen notieren (z. B. `brain` oder `brain-tail...ts.net`).
+
+
+4. Docker & Compose auf `dins-master`
+-------------------------------------
+
+Ziel:
+- `dins-master` betreibt die wichtigsten orchestrierten Dienste:
+  - Web-Frontend (Nginx)
+  - WAN-Audio-Gateways (pro Benutzer)
+  - Schnittstellen zu Brain, HomeAssistant, etc.
+
+### 4.1 Docker installieren
+
+Auf `dins-master`:
+
+[__] Docker installieren:
+    ```bash
+    curl -fsSL https://get.docker.com | sh
+    ```
+
+[__] Benutzer in Docker-Gruppe aufnehmen:
+    ```bash
+    sudo usermod -aG docker "$USER"
+    newgrp docker
+    ```
+
+[__] Test:
+    ```bash
+    docker ps
+    docker run --rm hello-world
+    ```
+
+### 4.2 Docker Compose Plugin
+
+[__] Compose-Plugin installieren (falls nötig):
+    ```bash
+    sudo apt install -y docker-compose-plugin
+    docker compose version
+    ```
+
+
+5. DINS-Verzeichnisstruktur auf `dins-master`
+---------------------------------------------
+
+Ziel:
+- Standardisierte Struktur unter `/opt/dins` für alle DINS-Komponenten.
+
+Auf `dins-master`:
+
+[__] Basisstruktur anlegen:
+    ```bash
+    sudo mkdir -p /opt/dins
+    sudo mkdir -p /opt/dins/webroot
+    sudo mkdir -p /opt/dins/web
+    sudo mkdir -p /opt/dins/services
+    sudo mkdir -p /opt/dins/config
+    sudo mkdir -p /opt/dins/logs
+    sudo mkdir -p /opt/dins/mqtt-data
+    sudo mkdir -p /opt/dins/mqtt-conf
+    sudo mkdir -p /opt/dins/mqtt-logs
+    sudo mkdir -p /opt/dins/nodered-data
+    sudo chown -R "$USER":"$USER" /opt/dins
+    ```
+
+[__] Struktur prüfen:
+    ```bash
+    ls -R /opt/dins
+    ```
+
+[__] leere docker-compose.yml anlegen (wird später befüllt):
+    ```bash
+    cat << 'EOF' > /opt/dins/docker-compose.yml
+    version: "3.8"
+
+    services:
+      # Wird später gefüllt:
+      # - dins-web (Nginx)
+      # - dins-wan-gateway-* (pro Benutzer)
+      # - dins-local-mic-*
+      # - mqtt-broker
+      # - nodered
+      # - homeassistant
+      # - agent-router
+      # - stt-router
+      # - tts-service
+
+    networks:
+      dins-core-net:
+        driver: bridge
+
+    EOF
+    ```
+
+
+6. Nginx-Webserver (nur statische Dateien) auf `dins-master`
+-----------------------------------------------------------
+
+Ziel:
+- Ein einfacher Webserver liefert HTML/JS/CSS aus `/opt/dins/webroot`.
+- Keine WebSocket-Proxies in Nginx (WS-Verbindungen gehen direkt zu Gateway-Ports).
+
+### 6.1 Minimale Testseite
+
+[__] Testseite erstellen:
+    ```bash
+    cat << 'EOF' > /opt/dins/webroot/index.html
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>DINS – Testseite</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { background:#111; color:#eee; font-family:sans-serif; text-align:center; padding-top:40px; }
+        h1 { margin-bottom: 10px; }
+        p  { opacity: 0.8; }
+      </style>
+    </head>
+    <body>
+      <h1>DINS – Testseite</h1>
+      <p>Wenn du diese Seite auf deinem Smartphone über Tailscale siehst, ist der Web-Stack OK.</p>
+    </body>
+    </html>
+    EOF
+    ```
+
+### 6.2 Nginx-Konfiguration
+
+[__] Nginx-Config-Verzeichnis erstellen:
+    ```bash
+    mkdir -p /opt/dins/web/conf.d
+    ```
+
+[__] Minimal-Config erstellen:
+    ```bash
+    cat << 'EOF' > /opt/dins/web/conf.d/default.conf
+    server {
+        listen 80;
+        server_name _;
+
+        root /usr/share/nginx/html;
+        index index.html;
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+    }
+    EOF
+    ```
+
+### 6.3 docker-compose für `dins-web`
+
+[__] docker-compose.yml anpassen (Webservice einfügen):
+    ```bash
+    cat << 'EOF' > /opt/dins/docker-compose.yml
+    version: "3.8"
+
+    services:
+      dins-web:
+        image: nginx:alpine
+        container_name: dins-web
+        restart: unless-stopped
+        ports:
+          - "8080:80"
+        volumes:
+          - ./webroot:/usr/share/nginx/html:ro
+          - ./web/conf.d:/etc/nginx/conf.d:ro
+        networks:
+          - dins-core-net
+
+    networks:
+      dins-core-net:
+        driver: bridge
+    EOF
+    ```
+
+[__] Container starten:
+    ```bash
+    cd /opt/dins
+    docker compose up -d
+    docker ps
+    ```
+
+[__] Lokal testen:
+    ```bash
+    curl http://localhost:8080
+    ```
+
+### 6.4 Tailscale Serve für HTTPS (nur Info, Umsetzung später)
+
+Später:
+- `tailscale serve` wird so konfiguriert, dass `/` von `http://localhost:8080` geproxyt wird.  
+- Das wird bei Bedarf in einem eigenen Abschnitt konkretisiert.
+
+
+7. Audio-Hardware: Mikrofonarrays & USB-Mics
+--------------------------------------------
+
+Ziel:
+- Alle relevanten Audio-Devices werden erkannt:
+  - USB-Mikros
+  - ReSpeaker 2-Mic HAT
+  - ReSpeaker 4-Mic Round
+  - ReSpeaker 4-Mic Linear
+  - ReSpeaker 8-Mic Array
+
+### 7.1 Allgemeine ALSA-Konfiguration
+
+Auf jedem Pi, auf dem ein Mikro laufen soll:
+
+[__] ALSA-Tools installieren:
+    ```bash
+    sudo apt install -y alsa-utils
+    ```
+
+[__] Audio-Devices anzeigen:
+    ```bash
+    arecord -l
+    aplay -l
+    ```
+
+[__] Notieren, welche Karten/Devices welchem Mikrofon entsprechen (z. B. `card 1: seeed4mic` usw.).
+
+### 7.2 USB-Mikrofon (generisch)
+
+[__] USB-Mic einstecken
+[__] `arecord -l` prüfen, ob Gerät erkannt wird
+[__] Testaufnahme:
+    ```bash
+    arecord -D plughw:1,0 -f cd -t wav -d 5 -r 16000 test_usbmic.wav
+    aplay test_usbmic.wav
+    ```
+
+### 7.3 ReSpeaker 2-Mic HAT
+
+[__] HAT mechanisch korrekt aufgesteckt
+[__] Treiber/Overlay prüfen (z. B. in `/boot/config.txt`):
+    - Eintrag (je nach Modell):
+      ```
+      dtoverlay=seeed-2mic-voicecard
+      ```
+
+[__] Reboot:
+    ```bash
+    sudo reboot
+    ```
+
+[__] `arecord -l` prüfen, ob das HAT als Soundkarte auftaucht
+
+### 7.4 ReSpeaker 4-Mic Array (Round)
+
+[__] Array korrekt angeschlossen (USB)
+[__] `arecord -l` prüfen
+[__] Testaufnahme wie bei USB-Mic
+
+### 7.5 ReSpeaker 4-Mic Linear Array
+
+[__] Linear Array anschließen
+[__] `arecord -l` prüfen
+[__] Testaufnahme
+
+### 7.6 ReSpeaker 8-Mic Array
+
+[__] 8-Mic Array anschließen
+[__] `arecord -l` prüfen
+[__] Besonderheit beachten: Mehr Kanäle (8)
+[__] Testaufnahme (z. B. 8-Kanal, später Downmix auf Mono/Beamforming vorgesehen)
+
+(Die spezifischen Beamforming-Schritte und HRTF-Konfigurationen werden in einer späteren Ausbaustufe beschrieben.)
+
+
+8. DINS-WAN-Audio-Gateways (pro Benutzer)
+-----------------------------------------
+
+Ziel:
+- Für jeden registrierten Benutzer (z. B. „Ehemann“, „Ehefrau“, „Kind“) existiert ein eigener WAN-Audio-Gateway-Container.
+- Jeder Gateway-Container nimmt Audio via WebSocket vom Smartphone entgegen und schickt es in die STT-Pipeline.
+
+**WICHTIG:** In diesem Plan ist nur der Rahmen; die konkrete Implementierung von STT/LLM erfolgt in späteren Hauptpunkten.
+
+### 8.1 Verzeichnisstruktur für Gateways
+
+Auf `dins-master`:
+
+[__] Ordner für Gateways anlegen:
+    ```bash
+    mkdir -p /opt/dins/services/wan-gateway-ehemann
+    mkdir -p /opt/dins/services/wan-gateway-ehefrau
+    mkdir -p /opt/dins/services/wan-gateway-kind
+    ```
+    (weitere Benutzer nach Bedarf)
+
+[__] Platzhalter-Dateien anlegen (werden später mit Code gefüllt):
+    ```bash
+    touch /opt/dins/services/wan-gateway-ehemann/main.py
+    touch /opt/dins/services/wan-gateway-ehefrau/main.py
+    touch /opt/dins/services/wan-gateway-kind/main.py
+    ```
+
+### 8.2 Dockerfile-Template für WAN-Gateways
+
+[__] Template für Python/FastAPI-basierte Gateways erstellen (z. B. in `wan-gateway-template` – optional):
+    ```bash
+    mkdir -p /opt/dins/services/wan-gateway-template
+    ```
+
+[__] `Dockerfile`-Template anlegen:
+    ```bash
+    cat << 'EOF' > /opt/dins/services/wan-gateway-template/Dockerfile
+    FROM python:3.11-slim
+
+    WORKDIR /app
+    COPY requirements.txt .
+    RUN pip install --no-cache-dir -r requirements.txt
+
+    COPY main.py .
+
+    CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9001"]
+    EOF
+    ```
+
+[__] `requirements.txt`-Template:
+    ```bash
+    cat << 'EOF' > /opt/dins/services/wan-gateway-template/requirements.txt
+    fastapi
+    uvicorn[standard]
+    EOF
+    ```
+
+> Die individuellen Gateways (`wan-gateway-ehemann`, `wan-gateway-ehefrau`, `wan-gateway-kind`) können dieses Template später kopieren und nur Namen/Ports/Benutzer-Logik unterscheiden.
+
+
+9. DINS-LAN-Microphone-Gateways (pro Pi / Raum)
+-----------------------------------------------
+
+Ziel:
+- Für jeden Pi bzw. jeden Raum existiert ein eigener Microphone-Gateway-Container.
+- Er liest von der jeweiligen Soundkarte (Mic-Array), macht VAD/WakeWord und schickt Frames in den zentralen Audio-Bus / STT-Router.
+
+### 9.1 Verzeichnisstruktur für lokale Mic-Gateways
+
+Auf `dins-master` (oder teilweise auf Clients – je nach Docker-Strategie):
+
+[__] Ordner anlegen:
+    ```bash
+    mkdir -p /opt/dins/services/mic-gateway-dins-master
+    mkdir -p /opt/dins/services/mic-gateway-client01
+    mkdir -p /opt/dins/services/mic-gateway-client02
+    ```
+
+[__] Platzhalter für Code:
+    ```bash
+    touch /opt/dins/services/mic-gateway-dins-master/main.py
+    touch /opt/dins/services/mic-gateway-client01/main.py
+    touch /opt/dins/services/mic-gateway-client02/main.py
+    ```
+
+(Die Details der Audio-Abfrage, VAD und WakeWord werden in einem späteren Abschnitt implementiert.)
+
+
+10. Zentrale Dienste: MQTT, Node-RED, Agent-Router
+--------------------------------------------------
+
+Ziel:
+- Ein zentraler Automations-Backbone:
+  - MQTT-Broker (Mosquitto)
+  - Node-RED als orchestrierbare Logik- und Debug-Oberfläche
+  - Agent-Router-Service, der Text-Kommandos von STT annimmt und an passende Agenten verteilt.
+
+### 10.1 MQTT-Broker (Mosquitto)
+
+[__] Ordner auf `dins-master`:
+    ```bash
+    mkdir -p /opt/dins/mqtt-conf
+    mkdir -p /opt/dins/mqtt-data
+    mkdir -p /opt/dins/mqtt-logs
+    ```
+
+[__] Basis-Konfiguration (Platzhalter):
+    ```bash
+    cat << 'EOF' > /opt/dins/mqtt-conf/mosquitto.conf
+    listener 1883
+    allow_anonymous true
+    persistence true
+    persistence_location /mosquitto/data/
+    log_dest file /mosquitto/log/mosquitto.log
+    EOF
+    ```
+
+[__] Mosquitto-Service in docker-compose.yml aufnehmen (später – hier nur Planung).
+
+### 10.2 Node-RED
+
+[__] Verzeichnis:
+    ```bash
+    mkdir -p /opt/dins/nodered-data
+    ```
+
+[__] Node-RED-Service wird später in docker-compose.yml definiert.
+
+### 10.3 Agent-Router (Planung)
+
+[__] Verzeichnis für Agent-Router-Service anlegen:
+    ```bash
+    mkdir -p /opt/dins/services/agent-router
+    touch /opt/dins/services/agent-router/main.py
+    ```
+
+[__] Rolle:
+    - Abonnieren von STT-Ausgaben (z. B. via MQTT-Topic oder HTTP)
+    - Analysieren des Texts
+    - Weiterleiten an:
+      - HomeAssistant-Agent
+      - Bluetooth-Security-Agent
+      - WLAN-Access-Agent
+      - etc.
+
+
+11. STT-Router & STT-Backends (Brain, lokal, Cloud)
+---------------------------------------------------
+
+Ziel:
+- Ein STT-Router entscheidet zur Laufzeit:
+  - Ist Brain erreichbar? → dort STT ausführen
+  - Sonst lokale Whisper-Instanz verwenden
+  - Optional Cloud-STT als letzte Fallback-Option
+
+### 11.1 STT-Router-Verzeichnis
+
+[__] Verzeichnis anlegen:
+    ```bash
+    mkdir -p /opt/dins/services/stt-router
+    touch /opt/dins/services/stt-router/main.py
+    ```
+
+[__] Aufgaben des STT-Routers (konzeptionell):
+    - Eingänge: PCM-Audio-Frames oder komplette Audioclips
+    - Healthchecks:
+      - Brain-Server (Whisper) erreichbar?
+      - Lokale STT verfügbar?
+    - Ausgänge: Text + Metadaten (Sprache, Erkennungsqualität, Benutzer-ID, Quelle)
+
+### 11.2 Backends (Planung)
+
+[__] Brain-/LLM-Server:
+    - Whisper/Whisper.cpp/Faster-Whisper
+    - API-Endpunkte für STT (z. B. `/stt/stream`, `/stt`)
+
+[__] Lokale STT (Pi):
+    - kleine Whisper-Modelle
+    - CPU-basiert
+
+[__] Cloud-STT (optional):
+    - OpenAI Audio-API
+    - Gemini Audio-API
+    - Nur als Notfall, nie direkt an Smarthomes gebunden.
+
+
+12. TTS-Service (Piper / Cloud-Fallback)
+----------------------------------------
+
+Ziel:
+- Text wird in Sprache umgewandelt:
+  - Lokal über Piper (wenn möglich)
+  - Optional über Cloud (wenn nötig)
+
+### 12.1 Verzeichnis für TTS-Service
+
+[__] Verzeichnis anlegen:
+    ```bash
+    mkdir -p /opt/dins/services/tts-service
+    touch /opt/dins/services/tts-service/main.py
+    ```
+
+[__] Piper-Setup (wird später detailliert):
+    - Modelle für Sprachen (z. B. Deutsch, Englisch)
+    - Konfiguration der Lautsprecher-Ausgabe (am Pi)
+    - Option: Audio als Stream zurück an den WAN-Gateway senden (für Smartphoneausgabe)
+
+
+13. Zusammenführung & Feintuning
+--------------------------------
+
+Ziel:
+- Alle oben definierten Module laufen im Verbund:
+  - Multi-User-WAN-Audio
+  - Multi-Raum-Mic-Arrays
+  - STT-Routing (Brain + Pi + Cloud)
+  - Agent-Router (HomeAssistant, Security usw.)
+  - TTS (lokal + Phone)
+
+[__] docker-compose.yml wird um alle Dienste erweitert (in mehreren Iterationen):
+    - `dins-web`
+    - `mqtt-broker`
+    - `nodered`
+    - `wan-gateway-*`
+    - `mic-gateway-*`
+    - `stt-router`
+    - `tts-service`
+    - `agent-router`
+
+[__] Healthchecks implementieren (z. B. `/health`-Endpoints)
+[__] Monitoring/Logging einrichten (Node-RED-Flow, Grafana, etc. – optional)
+
+---
+
+Hinweis zum weiteren Vorgehen
+-----------------------------
+- Diese Datei bildet den **strukturellen Bauplan** für DINS.
+- In weiteren Schritten (im Chat) können wir:
+  - jeden Abschnitt konkret mit Code füllen
+  - docker-compose-Services für alle Module definieren
+  - validierungsskripte (`validate_01.sh`, `validate_02.sh`, …) erstellen
+  - die Audio-Pipelines (Smartphone-WS & Mic-Array) im Detail implementieren
+  - STT/TTS-Backends (Brain & Fallbacks) schrittweise aufbauen.
+
+Du kannst diese Datei als Master-Checkliste nutzen, nach und nach `[__]` → `[OK]` setzen und jederzeit die aktuelle Version wieder hier hochladen, damit ich genau sehe, wo dein Stand ist.

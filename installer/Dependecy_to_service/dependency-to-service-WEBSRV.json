@@ -1,0 +1,21 @@
+{
+  "caddy": ["caddy"],
+  "caddyfile": ["caddy"],
+  "docker.sock": ["traefik"],
+  "envoy": ["envoy"],
+  "envoy.yaml": ["envoy"],
+  "express-gateway": ["express-gateway"],
+  "haproxy": ["haproxy"],
+  "haproxy.cfg": ["haproxy"],
+  "htdocs": ["apache"],
+  "html": ["nginx"],
+  "httpd": ["apache"],
+  "kong": ["kong"],
+  "krakend": ["krakend"],
+  "krakend.json": ["krakend"],
+  "nginx": ["nginx"],
+  "openresty": ["openresty"],
+  "traefik": ["traefik"],
+  "tyk-gateway": ["tyk"],
+  "unit": ["nginx-unit"]
+}

@@ -1,0 +1,166 @@
+version: "3.9"
+
+# project/
+# ├── docker-compose-AUDIO.yml
+# └── audio/
+#     ├── flask/                       # Flask-based streaming API
+#     ├── fastapi/                     # FastAPI + WebSocket audio API
+#     ├── node-audio/                  # Node.js Socket.io relay
+#     ├── gstreamer/                   # GStreamer-based audio processing
+#     ├── ffmpeg/                      # FFmpeg server (transcoding/conversion)
+#     ├── janus/                       # Janus WebRTC gateway
+#     ├── jitsi/                       # Jitsi Meet server
+#     ├── mediasoup/                   # SFU for audio streaming
+#     ├── audiostreamer/               # Python-based streaming server
+#     ├── pydub/                       # PyDub-based audio conversion server
+#     ├── socketio/                    # Socket.IO audio proxy
+#     ├── audioproxy/                  # Simple REST audio proxy
+#     ├── asterisk/                    # VoIP + PBX server
+#     ├── deno/                        # Deno-based audio API
+#     ├── openmediaserver/             # Generic media stream relay
+#     ├── mumble/                      # Mumble server (voice chat)
+#     ├── icecast/                     # MP3/Ogg audio broadcaster
+#     ├── obs-webrtc/                  # OBS WebRTC relay (if needed)
+#     ├── shoutcast/                   # Radio-style stream
+#     └── mpd/                         # Music Player Daemon (optional audio in)
+
+services:
+
+  flask-audio:
+    build: ./audio/flask
+    container_name: flask-audio
+    ports:
+      - "5100:5000"
+    restart: unless-stopped
+
+  fastapi-audio:
+    build: ./audio/fastapi
+    container_name: fastapi-audio
+    ports:
+      - "5101:8000"
+    restart: unless-stopped
+
+  node-audio:
+    build: ./audio/node-audio
+    container_name: node-audio
+    ports:
+      - "5102:3000"
+    restart: unless-stopped
+
+  gstreamer:
+    image: ghcr.io/gstreamer/gstreamer:latest
+    container_name: gstreamer
+    restart: unless-stopped
+
+  ffmpeg-server:
+    image: jrottenberg/ffmpeg:latest
+    container_name: ffmpeg
+    restart: unless-stopped
+
+  janus:
+    image: meetecho/janus-gateway
+    container_name: janus
+    ports:
+      - "5103:8088"
+      - "5104:8188"
+    restart: unless-stopped
+
+  jitsi:
+    image: jitsi/web
+    container_name: jitsi
+    ports:
+      - "5105:80"
+    restart: unless-stopped
+
+  mediasoup:
+    build: ./audio/mediasoup
+    container_name: mediasoup
+    ports:
+      - "5106:3000"
+    restart: unless-stopped
+
+  audiostreamer:
+    build: ./audio/audiostreamer
+    container_name: audiostreamer
+    ports:
+      - "5107:5000"
+    restart: unless-stopped
+
+  pydub-server:
+    build: ./audio/pydub
+    container_name: pydub
+    ports:
+      - "5108:5000"
+    restart: unless-stopped
+
+  socketio-audio:
+    build: ./audio/socketio
+    container_name: socketio-audio
+    ports:
+      - "5109:3000"
+    restart: unless-stopped
+
+  audio-proxy:
+    build: ./audio/audioproxy
+    container_name: audio-proxy
+    ports:
+      - "5110:5000"
+    restart: unless-stopped
+
+  asterisk:
+    image: andrius/asterisk
+    container_name: asterisk
+    ports:
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+    restart: unless-stopped
+
+  deno-audio:
+    build: ./audio/deno
+    container_name: deno-audio
+    ports:
+      - "5111:8000"
+    restart: unless-stopped
+
+  openmediaserver:
+    build: ./audio/openmediaserver
+    container_name: openmediaserver
+    ports:
+      - "5112:8080"
+    restart: unless-stopped
+
+  mumble-server:
+    image: mumblevoip/mumble-server
+    container_name: mumble
+    ports:
+      - "5113:64738/tcp"
+      - "5113:64738/udp"
+    restart: unless-stopped
+
+  icecast:
+    image: moul/icecast
+    container_name: icecast
+    ports:
+      - "5114:8000"
+    restart: unless-stopped
+
+  obs-webrtc:
+    build: ./audio/obs-webrtc
+    container_name: obs-webrtc
+    ports:
+      - "5115:8189"
+    restart: unless-stopped
+
+  shoutcast:
+    image: fauria/shoutcast
+    container_name: shoutcast
+    ports:
+      - "5116:8000"
+    restart: unless-stopped
+
+  mpd:
+    image: vimagick/mpd
+    container_name: mpd
+    ports:
+      - "5117:6600"
+    restart: unless-stopped

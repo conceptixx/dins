@@ -1,0 +1,7 @@
+version: "3.9"
+
+services:
+  # Example service - replace with actual agents later
+  placeholder-service:
+    image: hello-world
+    restart: "no"
