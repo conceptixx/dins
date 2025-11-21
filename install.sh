@@ -78,6 +78,12 @@ start_install() {
     sudo systemctl enable dins-wake.service > /dev/null
   }
 
+#  up_raspi
+#  prerequisites
+#  inst_docker
+#  enable_docker
+  enable_systemd
+
   log "[REBOOT] Preparing to reboot now..."
   sudo touch "$PAUSE_FLAG"
   sudo reboot
