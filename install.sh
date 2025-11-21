@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# reworked 11-21-2025-22:13
+# reworked 11-21-2025-22:27
 
 INSTALL_MARKER="/var/log/dins-install-complete"
 PAUSE_FLAG="/var/log/dins-wait-for-tty"
@@ -54,8 +54,8 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=simple
-ExecStart=/bin/bash /home/pi/install.sh
+Type=idle
+ExecStart=/bin/login -f pi
 StandardOutput=journal+console
 StandardError=journal+console
 Restart=no
