@@ -4,10 +4,22 @@ set -e
 echo "[DINS] Updating and upgrading Raspberry Pi OS..."
 sudo apt-get update -y && sudo apt-get upgrade -y
 
-echo "[DINS] Installing Docker..."
-sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release software-properties-common
+echo "[DINS] Installing Docker prerequisites..."
+
+# Check if software-properties-common is available in the package list
+if apt-cache show software-properties-common > /dev/null 2>&1; then
+  sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release software-properties-common
+else
+  sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+fi
+
 curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo   "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]   https://download.docker.com/linux/debian   $(lsb_release -cs) stable" |   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] \
+  https://download.docker.com/linux/debian \
+  $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt-get update -y
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
