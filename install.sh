@@ -75,7 +75,7 @@ start_install() {
     sudo systemctl daemon-reexec
     chmod 644 "$WAKE_UNIT"
     sudo systemctl daemon-reload
-    sudo systemctl enable "$WAKE_UNIT" > /dev/null
+    sudo systemctl enable dins-wake.service > /dev/null
   }
 
 #  up_raspi
