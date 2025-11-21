@@ -1,12 +1,17 @@
 #!/bin/bash
 set -e
 
+INSTALL_MARKER="/var/log/dins-install-complete"
+
+if [ -f "$INSTALL_MARKER" ]; then
+  echo "[DINS] Setup already completed. Skipping..."
+  exit 0
+fi
+
 echo "[DINS] Updating and upgrading Raspberry Pi OS..."
 sudo apt-get update -y && sudo apt-get upgrade -y
 
 echo "[DINS] Installing Docker prerequisites..."
-
-# Check if software-properties-common is available in the package list
 if apt-cache show software-properties-common > /dev/null 2>&1; then
   sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release software-properties-common
 else
@@ -24,26 +29,32 @@ echo \
 sudo apt-get update -y
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-echo "[DINS] Enabling Docker to start on boot..."
+echo "[DINS] Enabling Docker on boot..."
 sudo systemctl enable docker
 sudo usermod -aG docker $USER
 
-echo "[DINS] Initializing Docker Swarm..."
-if ! docker info | grep -q 'Swarm: active'; then
-  docker swarm init
-else
-  echo "[DINS] Swarm already active."
-fi
+echo "[DINS] Creating systemd unit to resume setup after reboot..."
+SERVICE_NAME="dins-continue-install"
 
-echo "[DINS] Pulling local install image or falling back to GHCR..."
-if docker image inspect install:local > /dev/null 2>&1; then
-  IMAGE_NAME="install:local"
-else
-  IMAGE_NAME="ghcr.io/conceptixx/install:latest"
-  docker pull $IMAGE_NAME
-fi
+cat <<EOF | sudo tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null
+[Unit]
+Description=DINS Resume Installation
+After=multi-user.target
 
-echo "[DINS] Running installer container..."
-docker run -d --name dins-installer --restart unless-stopped \
-  --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
-  $IMAGE_NAME
+[Service]
+Type=simple
+ExecStart=/bin/bash /home/pi/install.sh
+StandardOutput=journal
+StandardError=journal
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl enable $SERVICE_NAME
+
+echo "[DINS] Rebooting to apply Docker group changes..."
+sudo reboot
