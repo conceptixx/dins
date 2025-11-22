@@ -240,7 +240,15 @@ run_setup_image() {
   log "[HELPER] DINS-Setup command available globally."
 
   # Clean up mode marker files (so next run starts fresh)
-  rm -f ./simulate ./webUI ./console ./execute 2>/dev/null || true
+#
+#
+#
+#
+#  rm -f ./simulate ./webUI ./console ./execute 2>/dev/null || true
+#
+#
+#
+#
 }
 run_install_completed() {
   sudo mv /tmp/motd.backup /etc/motd
