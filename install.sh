@@ -103,6 +103,7 @@ enable_systemd_resume() {
 }
 
 create_systemd_wakeup() {
+  log "[SYSTEMD] wake unit file created..."
   local resume_file="/usr/local/bin/resume.sh"
   {
     echo "#!/bin/bash"
