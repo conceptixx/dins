@@ -17,7 +17,7 @@ NEXT_STATE=""
 
 log() {
   local msg="$(date '+%Y-%m-%d %H:%M:%S') - $1"
-  if [ "$DEBUG" = true ]; then
+  if [ "${DEBUG:-true}" = true ]; then
     echo "$msg" | tee -a "$LOG_FILE"
   else
     echo "$msg" >> "$LOG_FILE"
