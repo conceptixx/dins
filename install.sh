@@ -122,27 +122,26 @@ init_docker_swarm() {
   NEXT_STATE="[--] Pull Docker Setup Image"
 }
 pull_setup_image() {
-  # First, check for local install image
-  if docker image inspect install:local > /dev/null 2>&1; then
-    IMAGE_NAME="install:local"
-  else
-    IMAGE_NAME="ghcr.io/conceptixx/install:latest"
-    sudo docker pull --disable-content-trust=true $IMAGE_NAME
-    log "[IMAGE] Pulled GHCR: $IMAGE_NAME"
-  fi
+  local LOCAL_IMAGE="dins-setup:local"
+  local REMOTE_IMAGE="ghcr.io/conceptixx/dins-setup:latest"
 
-  # Then, pull the setup image
-  SETUP_IMAGE="ghcr.io/conceptixx/dins-setup:latest"
-  if ! sudo docker image inspect $SETUP_IMAGE > /dev/null 2>&1; then
-    log "[IMAGE] Pulling setup image: $SETUP_IMAGE"
-    sudo docker pull --disable-content-trust=true $SETUP_IMAGE
-    log "[IMAGE] Setup image pulled successfully."
+  # Prefer local build if available
+  if docker image inspect "$LOCAL_IMAGE" > /dev/null 2>&1; then
+    IMAGE_NAME="$LOCAL_IMAGE"
+    log "[IMAGE] Using local setup image: $LOCAL_IMAGE"
   else
-    log "[IMAGE] Setup image already present locally."
+    IMAGE_NAME="$REMOTE_IMAGE"
+    if ! sudo docker image inspect "$REMOTE_IMAGE" > /dev/null 2>&1; then
+      log "[IMAGE] Pulling setup image: $REMOTE_IMAGE"
+      sudo docker pull --disable-content-trust=true "$REMOTE_IMAGE"
+      log "[IMAGE] Setup image pulled successfully."
+    else
+      log "[IMAGE] Setup image already present locally."
+    fi
   fi
 
   {
-    echo "[OK] Docker Setup Image pulled"
+    echo "[OK] Docker Setup Image ready ($IMAGE_NAME)"
   } | sudo tee -a /tmp/motd.dins > /dev/null
 
   NEXT_STATE="[--] Running Setup Image"
