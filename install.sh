@@ -117,6 +117,7 @@ create_systemd_wakeup() {
     echo "#!/bin/bash"
     echo "# This script will wait for an SSH session and then resume the install"
     echo ""
+    echo "sudo systemctl disable dins-wake.service > /dev/null"
     echo 'echo "$(date "+%Y-%m-%d %H:%M:%S") - $1" >> "/home/pi/dins-install.log"'
     echo ""
     echo "echo \"[DINS] Waiting for SSH session to resume installation...\""
@@ -154,7 +155,6 @@ start_install() {
 resume_install() {
   log "[RESUME] Resuming installation inside active TTY."
 
-  sudo systemctl disable dins-wake.service > /dev/null
 
   if ! docker info 2>/dev/null | grep -q 'Swarm: active'; then
     log "[SWARM] Initializing Docker Swarm..."
