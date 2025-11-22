@@ -81,7 +81,8 @@ start_install() {
   if [ ! -f /etc/motd.backup ]; then
     sudo cp /etc/motd /etc/motd.backup
   fi
-  sudo cp /etc/motd /tmp/motd.dins
+  sudo cp /etc/motd.backup /tmp/motd.dins
+  sudo cp /etc/motd.backup /etc/motd
   # create progress entries
   {
     echo ""
