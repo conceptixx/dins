@@ -9,6 +9,7 @@ set -euo pipefail # - regular
 # DINS INSTALLER
 # ==============================
 
+DEBUG=true
 LOG_FILE="/home/pi/dins-install.log"
 SCRIPT_PATH="/home/pi/install.sh"
 SCRIPT_URL="https://raw.githubusercontent.com/conceptixx/dins/main/install.sh"
