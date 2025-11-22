@@ -134,6 +134,7 @@ start_install() {
   create_systemd_reboot
 #  create_systemd_resume
   enable_systemd_reboot
+  create_systemd_wakeup
 
   log "[REBOOT] Preparing to reboot now..."
   sudo reboot
