@@ -32,9 +32,9 @@ up_raspi() {
   sudo apt-get upgrade -qq -y > /dev/null
   log "[APT] System updated and upgraded."
   {
-    echo "[OK] update and upgrade Raspberry Pi OS"
+    echo "[\033[1;32mOK\033[0m] update and upgrade Raspberry Pi OS"
   } | sudo tee -a /tmp/motd.dins > /dev/null
-  NEXT_STATE="[--] Installing Prerequisites"
+  NEXT_STATE="[\033[1;33m--\033[0m] Installing Prerequisites"
 }
 prerequisites() {
   if apt-cache show software-properties-common > /dev/null 2>&1; then
@@ -44,9 +44,9 @@ prerequisites() {
   fi
   log "[APT] Prerequisites installed."
   {
-    echo "[OK] Prerequisites installed"
+    echo "[\033[1;32mOK\033[0m] Prerequisites installed"
   } | sudo tee -a /tmp/motd.dins > /dev/null
-  NEXT_STATE="[--] Installing Docker"
+  NEXT_STATE="[\033[1;33m--\033[0m] Installing Docker"
 }
 inst_docker() {
   curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -55,18 +55,18 @@ inst_docker() {
   sudo apt-get install -qq -y docker-ce docker-ce-cli containerd.io docker-compose-plugin > /dev/null
   log "[DOCKER] Docker installed successfully."
   {
-    echo "[OK] Docker installed"
+    echo "[\033[1;32mOK\033[0m] Docker installed"
   } | sudo tee -a /tmp/motd.dins > /dev/null
-  NEXT_STATE="[--] Enabling Docker"
+  NEXT_STATE="[\033[1;33m--\033[0m] Enabling Docker"
 }
 enable_docker() {
   sudo systemctl enable docker > /dev/null
   sudo usermod -aG docker "$USER"
   log "[DOCKER] Docker enabled and user added to group."
   {
-    echo "[OK] Docker enabled"
+    echo "[\033[1;32mOK\033[0m] Docker enabled"
   } | sudo tee -a /tmp/motd.dins > /dev/null
-  NEXT_STATE="[--] Initializing Docker Swarm"
+  NEXT_STATE="[\033[1;33m--\033[0m] Initializing Docker Swarm"
 }
 start_install() {
   echo "[DINS] Installation started"
@@ -85,7 +85,7 @@ start_install() {
   # create progress entries
   {
     echo ""
-    echo "[DINS] Installation running ..."
+    echo "[\033[1;36mDINS\033[0m] \033[1;37mInstallation running ...\033[0m"
   } | sudo tee -a /tmp/motd.dins > /dev/null
   # start log file
   local LOGSTAMP=$(date -u +"%Y%m%d_%H%M%SZ")
@@ -93,13 +93,36 @@ start_install() {
   log "--- started installation $LOGSTAMP"
   log "---"
 }
+run_reboot_docker() {
+  log "[REBOOT] Preparing to reboot now..."
+  sudo cp /tmp/motd.dins /etc/motd
+  MODC="\033[1;33mC\033[0m"
+  MODS="\033[1;32mS\033[0m"
+  MODW="\033[1;34mW\033[0m"
+  MODE="\033[1;36mE\033[0m"
+  {
+    echo "${NEXT_STATE}"
+    echo ""
+    echo 'To continue run "\033[1;33msudo ./install.sh\033[0m"'
+    echo ""
+    echo "usage:"
+    echo "    --$MODS          | simulate installation for not container components"
+    echo "    --$MODC          | enables console for configuration"
+    echo "    --$MODW          | enables webUI for configuration"
+    echo "    --$MODC --$MODE      | enables and launches console configuration"
+    echo "    --$MODW --$MODC --$MODE  | enables webUI and console and launches console config"
+    echo "    --$MODW --$MODC      | enables webUi and console configuration"
+  } | sudo tee -a /etc/motd > /dev/null
+  sync
+  sudo reboot
+}
 run_reboot() {
   log "[REBOOT] Preparing to reboot now..."
   sudo cp /tmp/motd.dins /etc/motd
   {
     echo "${NEXT_STATE}"
     echo ""
-    echo 'To continue run "sudo ./install.sh"'
+    echo 'To continue run "\033[1;33msudo ./install.sh\033[0m"'
   } | sudo tee -a /etc/motd > /dev/null
   sync
   sudo reboot
@@ -109,6 +132,10 @@ init_docker_swarm() {
     IP_ADDR=$(get_advertise_addr | tail -n1 | xargs)
     if [[ -z "$IP_ADDR" ]]; then
       log "[ERROR] No valid IP found for Docker Swarm. Skipping initialization."
+      {
+        echo "[\033[1;31mXX\033[0m] No valid IP found for Docker Swarm. Skipping initialization"
+      } | sudo tee -a /tmp/motd.dins > /dev/null
+      echo "init_docker_swarm" > ./state
       return 1
     fi
     log "[SWARM] Initializing Docker Swarm on $IP_ADDR ..."
@@ -117,9 +144,9 @@ init_docker_swarm() {
     log "[SWARM] Docker Swarm already active."
   fi
   {
-    echo "[OK] Docker Swarm initialized"
+    echo "[\033[1;32mOK\033[0m] Docker Swarm initialized"
   } | sudo tee -a /tmp/motd.dins > /dev/null
-  NEXT_STATE="[--] Pull Docker Setup Image"
+  NEXT_STATE="[\033[1;33m--\033[0m] Pull Docker Setup Image"
 }
 pull_setup_image() {
   local LOCAL_IMAGE="dins-setup:local"
@@ -141,10 +168,10 @@ pull_setup_image() {
   fi
 
   {
-    echo "[OK] Docker Setup Image ready ($IMAGE_NAME)"
+    echo "[\033[1;32mOK\033[0m] Docker Setup Image ready ($IMAGE_NAME)"
   } | sudo tee -a /tmp/motd.dins > /dev/null
 
-  NEXT_STATE="[--] Running Setup Image"
+  NEXT_STATE="[\033[1;33m--\033[0m] Running Setup Image"
 }
 run_setup_image() {
   IMAGE_NAME=${IMAGE_NAME:-"ghcr.io/conceptixx/dins-setup:latest"}
@@ -166,9 +193,9 @@ run_setup_image() {
     }
 
   {
-    echo "[OK] Run Docker Setup Image"
+    echo "[\033[1;32mOK\033[0m] Run Docker Setup Image"
   } | sudo tee -a /tmp/motd.dins > /dev/null
-  NEXT_STATE="[--] Setup DINS System"
+  NEXT_STATE="[\033[1;33m--\033[0m] Setup DINS System"
 }
 run_install_completed() {
   sudo mv /tmp/motd.backup /etc/motd
@@ -231,7 +258,7 @@ main() {
         ;;
       docker_reboot)
         echo "init_docker_swarm" > ./state
-        run_reboot
+        run_reboot_docker
         break
         ;;
       init_docker_swarm)
