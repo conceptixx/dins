@@ -174,16 +174,16 @@ run_setup_image() {
       local ENABLE_WEBUI=false
       local ENABLE_CONSOLE=false
       local AUTO_EXECUTE=false
-      if [ ! -f ./simulate ]; then
+      if [ -f ./simulate ]; then
         SIMULATE=true
       fi
-      if [ ! -f ./webUI ]; then
+      if [ -f ./webUI ]; then
         ENABLE_WEBUI=true
       fi
-      if [ ! -f ./console ]; then
+      if [ -f ./console ]; then
         ENABLE_CONSOLE=true
       fi
-      if [ ! -f ./execute ]; then
+      if [ -f ./execute ]; then
         AUTO_EXECUTE=true
       fi
 
