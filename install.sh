@@ -128,7 +128,7 @@ create_systemd_wakeup() {
     echo "done"
     echo ""
     echo "# Once we have a TTY, run the resume function"
-    echo "/home/pi/install.sh --resume"
+    echo 'sudo -u pi /usr/bin/script -q -c "/home/pi/install.sh --resume" /dev/null'
   } | sudo tee "$resume_file" >/dev/null
   sudo chmod 644 "$resume_file"
 
