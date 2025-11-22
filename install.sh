@@ -170,22 +170,16 @@ pull_setup_image() {
   NEXT_STATE="[--] Running Setup Image"
 }
 run_setup_image() {
-      local SIMULATE=false
-      local ENABLE_WEBUI=false
-      local ENABLE_CONSOLE=false
-      local AUTO_EXECUTE=false
-      if [ -f ./simulate ]; then
-        SIMULATE=true
-      fi
-      if [ -f ./webUI ]; then
-        ENABLE_WEBUI=true
-      fi
-      if [ -f ./console ]; then
-        ENABLE_CONSOLE=true
-      fi
-      if [ -f ./execute ]; then
-        AUTO_EXECUTE=true
-      fi
+  # Initialize mode flags based on marker files
+  local SIMULATE=false
+  local ENABLE_WEBUI=false
+  local ENABLE_CONSOLE=false
+  local AUTO_EXECUTE=false
+
+  [ -f ./simulate ] && SIMULATE=true
+  [ -f ./webUI ] && ENABLE_WEBUI=true
+  [ -f ./console ] && ENABLE_CONSOLE=true
+  [ -f ./execute ] && AUTO_EXECUTE=true
 
   IMAGE_NAME="ghcr.io/conceptixx/dins-setup:latest"
   log "[DOCKER] Starting main DINS setup container..."
@@ -194,31 +188,59 @@ run_setup_image() {
   log "         ENABLE_CONSOLE $ENABLE_CONSOLE"
   log "         AUTO_EXECUTE   $AUTO_EXECUTE"
 
+  # Remove any existing container before starting
   sudo docker rm -f dins-setup >/dev/null 2>&1 || true
 
-  local BASE_OPTS="--name dins-setup --restart unless-stopped \
+  # Common Docker run options
+  local BASE_OPTS="--name dins-setup \
     --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
-    -e SIMULATE=$SIMULATE -e ENABLE_WEBUI=$ENABLE_WEBUI \
-    -e ENABLE_CONSOLE=$ENABLE_CONSOLE -e AUTO_EXECUTE=$AUTO_EXECUTE"
+    -e SIMULATE=$SIMULATE \
+    -e ENABLE_WEBUI=$ENABLE_WEBUI \
+    -e ENABLE_CONSOLE=$ENABLE_CONSOLE \
+    -e AUTO_EXECUTE=$AUTO_EXECUTE"
 
+  # Container run logic
   if [ "$ENABLE_CONSOLE" = true ] && [ "$AUTO_EXECUTE" = true ]; then
-    # Console + Execute (attached mode)
+    # Console + Execute (attached interactive mode)
     log "[MODE] Console execution mode — attaching now."
     sudo docker run -it --rm $BASE_OPTS "$IMAGE_NAME"
+
   elif [ "$ENABLE_CONSOLE" = true ]; then
-    # Console only (detached, attach later)
+    # Console only (detached but attachable)
     log "[MODE] Console mode enabled (detached) — attach anytime with: sudo DINS-Setup"
     sudo docker run -d $BASE_OPTS "$IMAGE_NAME"
+
   elif [ "$ENABLE_WEBUI" = true ]; then
-    # WebUI only (detached)
+    # WebUI mode (persistent)
     log "[MODE] WebUI mode — running detached."
-    sudo docker run -d $BASE_OPTS "$IMAGE_NAME"
+    sudo docker run -d --restart unless-stopped $BASE_OPTS "$IMAGE_NAME"
+
   else
     # Default detached mode
     log "[MODE] Detached background mode."
-    sudo docker run -d $BASE_OPTS "$IMAGE_NAME"
+    sudo docker run -d --restart unless-stopped $BASE_OPTS "$IMAGE_NAME"
   fi
-  create_dins_setup_helper
+
+  # Create the helper script for console re-attachment
+  local HELPER_PATH="/usr/local/bin/DINS-Setup"
+  log "[HELPER] Creating helper tool at $HELPER_PATH"
+
+  {
+    echo '#!/bin/bash'
+    echo 'if sudo docker ps --format "{{.Names}}" | grep -q "^dins-setup$"; then'
+    echo '  echo "[DINS] Attaching to running setup container (Ctrl+C to exit)..."'
+    echo '  sudo docker attach dins-setup'
+    echo 'else'
+    echo '  echo "[DINS] No running setup container found. Starting one now..."'
+    echo '  sudo /home/pi/install.sh --C --E'
+    echo 'fi'
+  } | sudo tee "$HELPER_PATH" >/dev/null
+
+  sudo chmod +x "$HELPER_PATH"
+  log "[HELPER] DINS-Setup command available globally."
+
+  # Clean up mode marker files (so next run starts fresh)
+  rm -f ./simulate ./webUI ./console ./execute 2>/dev/null || true
 }
 run_install_completed() {
   sudo mv /tmp/motd.backup /etc/motd
@@ -254,25 +276,6 @@ get_advertise_addr() {
   log "[ERROR] No network IP found! Aborting Swarm init."
   echo ""
   return 1
-}
-create_dins_setup_helper() {
-  local HELPER_PATH="/usr/local/bin/DINS-Setup"
-
-  log "[SETUP] Installing DINS-Setup helper command..."
-
-  {
-    echo "#!/bin/bash"
-    echo 'if sudo docker ps --format "{{.Names}}" | grep -q "^dins-setup$"; then'
-    echo "  echo \"[DINS] Attaching to running setup container (Ctrl+C to exit)...\""
-    echo "  sudo docker attach dins-setup"
-    echo "else"
-    echo "  echo \"[DINS] No running setup container found. Starting one now...\""
-    echo "  sudo /home/pi/install.sh --C --E"
-    echo "fi"
-  } | sudo tee "$HELPER_PATH" >/dev/null
-
-  sudo chmod +x "$HELPER_PATH"
-  log "[SETUP] DINS-Setup helper installed at $HELPER_PATH"
 }
 
 main() {
