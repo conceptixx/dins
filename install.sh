@@ -148,8 +148,14 @@ start_install() {
   enable_systemd_reboot
   create_systemd_wakeup
 
+# Prevent rerun loop on reboot
+if systemctl is-active --quiet dins-wake.service; then
+  echo "[DINS] Wake service active — exiting to prevent reboot loop."
+  exit 0
+else
   log "[REBOOT] Preparing to reboot now..."
   sudo reboot
+fi
 }
 
 resume_install() {
