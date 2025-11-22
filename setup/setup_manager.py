@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
 import os
+import sys
 import time
 
 def log(msg):
@@ -9,30 +9,29 @@ def ensure_dirs():
     base = "/mnt/dins"
     subdirs = ["services", "images", "configs", "volumes"]
     for s in subdirs:
-        path = os.path.join(base, s)
-        os.makedirs(path, exist_ok=True)
-        log(f"Ensured directory: {path}")
+        os.makedirs(os.path.join(base, s), exist_ok=True)
+        log(f"Ensured directory: {os.path.join(base, s)}")
 
-def show_mode_summary():
+def main():
     simulate = os.getenv("SIMULATE", "false").lower() == "true"
-    webui = os.getenv("ENABLE_WEBUI", "false").lower() == "true"
-    console = os.getenv("ENABLE_CONSOLE", "false").lower() == "true"
-    execute = os.getenv("AUTO_EXECUTE", "false").lower() == "true"
+    enable_webui = os.getenv("ENABLE_WEBUI", "false").lower() == "true"
+    enable_console = os.getenv("ENABLE_CONSOLE", "false").lower() == "true"
+    auto_execute = os.getenv("AUTO_EXECUTE", "false").lower() == "true"
 
-    print("")  # empty line for spacing
-    print("THIS MESSAGE COMES FROM INSIDE THE DINS-SETUP-SERVICE/CONTAINER", flush=True)
-    if console: print("--C GIVEN", flush=True)
-    if execute: print("--E GIVEN", flush=True)
-    if simulate: print("--S GIVEN", flush=True)
-    if webui: print("--W GIVEN", flush=True)
-    print("THIS SCRIPT INSIDE NOW IS IDLE", flush=True)
-    print("")
+    log("Setup container started.")
+    log(f"--S simulate={simulate}")
+    log(f"--W webUI={enable_webui}")
+    log(f"--C console={enable_console}")
+    log(f"--E execute={auto_execute}")
+
+    ensure_dirs()
+    log("Setup completed. Container now idle (Ctrl+C to stop).")
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        log("Container stopped by user.")
 
 if __name__ == "__main__":
-    log("Setup container started.")
-    ensure_dirs()
-    show_mode_summary()
-
-    # Keep container alive (simulate service)
-    while True:
-        time.sleep(60)
+    main()

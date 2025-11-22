@@ -174,51 +174,34 @@ pull_setup_image() {
   NEXT_STATE="[--] Running Setup Image"
 }
 run_setup_image() {
-  IMAGE_NAME=${IMAGE_NAME:-"ghcr.io/conceptixx/dins-setup:latest"}
-  log "[DOCKER] Starting main DINS installer container..."
+  IMAGE_NAME="ghcr.io/conceptixx/dins-setup:latest"
+  log "[DOCKER] Starting main DINS setup container..."
 
-  # Ensure bind mount exists
-  if [ ! -d "/srv/docker/services" ]; then
-    log "[FS] Creating /srv/docker/services ..."
-    sudo mkdir -p /srv/docker/services
-    sudo chmod 777 /srv/docker/services
-  fi
+  sudo docker rm -f dins-setup >/dev/null 2>&1 || true
 
-  # Clean up any old container
-  if sudo docker ps -a --format '{{.Names}}' | grep -q '^dins-setup$'; then
-    log "[DOCKER] Removing existing dins-setup container..."
-    sudo docker stop dins-setup >/dev/null 2>&1 || true
-    sudo docker rm dins-setup >/dev/null 2>&1 || true
-  fi
+  local BASE_OPTS="--name dins-setup --restart unless-stopped \
+    --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
+    -e SIMULATE=$SIMULATE -e ENABLE_WEBUI=$ENABLE_WEBUI \
+    -e ENABLE_CONSOLE=$ENABLE_CONSOLE -e AUTO_EXECUTE=$AUTO_EXECUTE"
 
-  # If console mode is enabled, run interactively
-  if [ "$ENABLE_CONSOLE" = true ]; then
-    log "[MODE] Console mode active — attaching container output."
-    sudo docker run --rm -it \
-      --name dins-setup \
-      --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
-      -e SIMULATE="$SIMULATE" \
-      -e ENABLE_WEBUI="$ENABLE_WEBUI" \
-      -e ENABLE_CONSOLE="$ENABLE_CONSOLE" \
-      -e AUTO_EXECUTE="$AUTO_EXECUTE" \
-      "$IMAGE_NAME"
+  if [ "$ENABLE_CONSOLE" = true ] && [ "$AUTO_EXECUTE" = true ]; then
+    # Console + Execute (attached mode)
+    log "[MODE] Console execution mode — attaching now."
+    sudo docker run -it --rm $BASE_OPTS "$IMAGE_NAME"
+  elif [ "$ENABLE_CONSOLE" = true ]; then
+    # Console only (detached, attach later)
+    log "[MODE] Console mode enabled (detached) — attach anytime with: sudo DINS-Setup"
+    sudo docker run -d $BASE_OPTS "$IMAGE_NAME"
+  elif [ "$ENABLE_WEBUI" = true ]; then
+    # WebUI only (detached)
+    log "[MODE] WebUI mode — running detached."
+    sudo docker run -d $BASE_OPTS "$IMAGE_NAME"
   else
-    # Detached mode (background)
-    sudo docker run -d --name dins-setup --restart unless-stopped \
-      --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
-      -e SIMULATE="$SIMULATE" \
-      -e ENABLE_WEBUI="$ENABLE_WEBUI" \
-      -e ENABLE_CONSOLE="$ENABLE_CONSOLE" \
-      -e AUTO_EXECUTE="$AUTO_EXECUTE" \
-      "$IMAGE_NAME" || {
-        log "[WARN] Installer container already running."
-      }
+    # Default detached mode
+    log "[MODE] Detached background mode."
+    sudo docker run -d $BASE_OPTS "$IMAGE_NAME"
   fi
-
-  {
-    echo "[OK] Run Docker Setup Image"
-  } | sudo tee -a /tmp/motd.dins > /dev/null
-  # NEXT_STATE="[--] Setup DINS System"
+  create_dins_setup_helper
 }
 run_install_completed() {
   sudo mv /tmp/motd.backup /etc/motd
@@ -254,6 +237,25 @@ get_advertise_addr() {
   log "[ERROR] No network IP found! Aborting Swarm init."
   echo ""
   return 1
+}
+create_dins_setup_helper() {
+  local HELPER_PATH="/usr/local/bin/DINS-Setup"
+
+  log "[SETUP] Installing DINS-Setup helper command..."
+
+  {
+    echo "#!/bin/bash"
+    echo 'if sudo docker ps --format "{{.Names}}" | grep -q "^dins-setup$"; then'
+    echo "  echo \"[DINS] Attaching to running setup container (Ctrl+C to exit)...\""
+    echo "  sudo docker attach dins-setup"
+    echo "else"
+    echo "  echo \"[DINS] No running setup container found. Starting one now...\""
+    echo "  sudo /home/pi/install.sh --C --E"
+    echo "fi"
+  } | sudo tee "$HELPER_PATH" >/dev/null
+
+  sudo chmod +x "$HELPER_PATH"
+  log "[SETUP] DINS-Setup helper installed at $HELPER_PATH"
 }
 
 main() {
@@ -323,7 +325,8 @@ done
         ;;
       *)
         # first call
-        echo "up_raspi" > ./state
+        #echo "up_raspi" > ./state
+        echo "pull_setup_image" > ./state
         start_install
         ;;
     esac
