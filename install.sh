@@ -181,10 +181,20 @@ run_setup_image() {
     sudo chmod 777 /srv/docker/services
   fi
 
-  # Run container with simulation flag
+  # Clean up any old container
+  if sudo docker ps -a --format '{{.Names}}' | grep -q '^dins-setup$'; then
+    log "[DOCKER] Removing existing dins-setup container..."
+    sudo docker stop dins-setup >/dev/null 2>&1 || true
+    sudo docker rm dins-setup >/dev/null 2>&1 || true
+  fi
+
+  # Run container with parameter flags as environment variables
   sudo docker run -d --name dins-setup --restart unless-stopped \
     --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
     -e SIMULATE="$SIMULATE" \
+    -e ENABLE_WEBUI="$ENABLE_WEBUI" \
+    -e ENABLE_CONSOLE="$ENABLE_CONSOLE" \
+    -e AUTO_EXECUTE="$AUTO_EXECUTE" \
     "$IMAGE_NAME" || {
       log "[WARN] Installer container already running."
     }
