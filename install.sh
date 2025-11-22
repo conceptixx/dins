@@ -99,6 +99,7 @@ run_reboot() {
     echo ""
     echo 'To continue run "sudo ./install.sh"'
   } | sudo tee -a /etc/motd > /dev/null
+  sync
   sudo reboot
 }
 init_docker_swarm() {
