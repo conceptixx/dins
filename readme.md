@@ -1,7 +1,12 @@
-requirements for scripts
 
-1. deploy.sh
-brew install hudochenkov/sshpass/sshpass
 
-2. translate-json-to-yaml.sh
-brew install yq jq
+
+
+git add .
+git commit -m "Initial commit from local directory"
+git branch -M main
+git push -u origin main
+
+curl -s https://raw.githubusercontent.com/conceptixx/dins/main/install.sh | sudo bash
+
+curl -fsSL https://raw.githubusercontent.com/conceptixx/dins/main/install.sh | sudo bash -s -- --simulate
