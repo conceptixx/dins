@@ -21,85 +21,59 @@ log() {
 
 log "[START] Initial installation triggered."
 
-start_install() {
-  local LOGSTAMP=$(date -u +"%Y%m%d_%H%M%SZ")
-  log "---"
-  log "--- started installation $LOGSTAMP"
-  log "---"
-
-  up_raspi() {
-    sudo apt-get update -qq -y > /dev/null
-    sudo apt-get upgrade -qq -y > /dev/null
-    log "[APT] System updated and upgraded."
-  }
-  prerequisites() {
-    if apt-cache show software-properties-common > /dev/null 2>&1; then
-      sudo apt-get install -qq -y apt-transport-https ca-certificates curl gnupg lsb-release software-properties-common > /dev/null
-    else
-      sudo apt-get install -qq -y apt-transport-https ca-certificates curl gnupg lsb-release > /dev/null
-    fi
-    log "[APT] Prerequisites installed."
-  }
-  inst_docker() {
-    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    sudo apt-get update -qq -y > /dev/null
-    sudo apt-get install -qq -y docker-ce docker-ce-cli containerd.io docker-compose-plugin > /dev/null
-    log "[DOCKER] Docker installed successfully."
-  }
-  enable_docker() {
-    sudo systemctl enable docker > /dev/null
-    sudo usermod -aG docker "$USER"
-    log "[DOCKER] Docker enabled and user added to group."
-  }
-  enable_systemd() {
-    log "[SYSTEMD] Creating wake unit for reboot phase..."
-    {
-      echo "[Unit]"
-      echo "Description=DINS Wake Phase (After Reboot)"
-      echo "After=network-online.target"
-      echo "Wants=network-online.target"
-      echo ""
-      echo "[Service]"
-      echo "Type=oneshot"
-      echo "User=pi"
-      echo "ExecStart=/bin/bash /home/pi/install.sh --wake"
-      echo "WorkingDirectory=/home/pi"
-      echo "StandardOutput=journal+console"
-      echo "StandardError=journal+console"
-      echo "RemainAfterExit=no"
-      echo ""
-      echo "[Install]"
-      echo "WantedBy=multi-user.target"
-    } | sudo tee "$WAKE_UNIT" > /dev/null
-    sudo systemctl daemon-reexec
-    sudo chmod 644 "$WAKE_UNIT"
-    sudo systemctl daemon-reload
-    sudo systemctl enable dins-wake.service > /dev/null
-  }
-
-#  up_raspi
-#  prerequisites
-#  inst_docker
-#  enable_docker
-  enable_systemd
-
-  log "[REBOOT] Preparing to reboot now..."
-  sudo touch "$PAUSE_FLAG"
-  sudo reboot
+up_raspi() {
+  sudo apt-get update -qq -y > /dev/null
+  sudo apt-get upgrade -qq -y > /dev/null
+  log "[APT] System updated and upgraded."
 }
-
-reboot_pause() {
-  log "[WAKE] System rebooted and wake phase triggered."
-
-  if [ -f "$INSTALL_MARKER" ]; then
-    log "[WAKE] Installation already marked as complete. Aborting wake phase."
-    exit 0
+prerequisites() {
+  if apt-cache show software-properties-common > /dev/null 2>&1; then
+    sudo apt-get install -qq -y apt-transport-https ca-certificates curl gnupg lsb-release software-properties-common > /dev/null
+  else
+    sudo apt-get install -qq -y apt-transport-https ca-certificates curl gnupg lsb-release > /dev/null
   fi
-
-  log "[SYSTEMD] Disabling wake unit to prevent loop."
-  sudo systemctl disable dins-wake.service > /dev/null
-
+  log "[APT] Prerequisites installed."
+}
+inst_docker() {
+  curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt-get update -qq -y > /dev/null
+  sudo apt-get install -qq -y docker-ce docker-ce-cli containerd.io docker-compose-plugin > /dev/null
+  log "[DOCKER] Docker installed successfully."
+}
+enable_docker() {
+  sudo systemctl enable docker > /dev/null
+  sudo usermod -aG docker "$USER"
+  log "[DOCKER] Docker enabled and user added to group."
+}
+create_systemd_reboot() {
+  log "[SYSTEMD] Creating wake unit for reboot phase..."
+  {
+    echo "[Unit]"
+    echo "Description=DINS Wake Phase (After Reboot)"
+    echo "After=network-online.target"
+    echo "Wants=network-online.target"
+    echo ""
+    echo "[Service]"
+    echo "Type=oneshot"
+    echo "ExecStart=/bin/bash /usr/local/bin/resume.sh"
+    echo "WorkingDirectory=/home/pi"
+    echo "StandardOutput=journal+console"
+    echo "StandardError=journal+console"
+    echo "RemainAfterExit=no"
+    echo ""
+    echo "[Install]"
+    echo "WantedBy=multi-user.target"
+  } | sudo tee "$WAKE_UNIT" > /dev/null
+}
+enable_systemd_reboot() {
+  log "[SYSTEMD] Enabling wake unit..."
+  sudo systemctl daemon-reexec
+  sudo chmod 644 "$WAKE_UNIT"
+  sudo systemctl daemon-reload
+  sudo systemctl enable dins-wake.service > /dev/null
+}
+create_systemd_resume() {
   log "[SYSTEMD] Creating resume unit for next TTY login..."
   {
     echo "[Unit]"
@@ -108,7 +82,7 @@ reboot_pause() {
     echo ""
     echo "[Service]"
     echo "Type=idle"
-    echo "ExecStart=/bin/bash $SCRIPT_PATH --resume"
+    echo "ExecStart=/bin/bash /home/pi/install.sh --resume"
     echo "StandardOutput=journal+console"
     echo "StandardError=journal+console"
     echo "RemainAfterExit=no"
@@ -116,20 +90,59 @@ reboot_pause() {
     echo "[Install]"
     echo "WantedBy=multi-user.target"
   } | sudo tee $RESUME_UNIT > /dev/null
-
+}
+enable_systemd_resume() {
+  log "[SYSTEMD] Disabling wake unit to prevent loop."
+  sudo systemctl disable dins-wake.service > /dev/null
+  log "[SYSTEMD] Enabling resume unit..."
   sudo systemctl daemon-reexec
+  sudo chmod 644 "$RESUME_UNIT"
   sudo systemctl daemon-reload
   sudo systemctl enable dins-resume.service > /dev/null
 
-  log "[WAKE] Resume service ready. Waiting for SSH/TTY login..."
-  exit 0
+}
+
+create_systemd_wakeup() {
+  local resume_file="/usr/local/bin/resume.sh"
+  {
+    echo "#!/bin/bash"
+    echo "# This script will wait for an SSH session and then resume the install"
+    echo ""
+    echo "echo \"[DINS] Waiting for SSH session to resume installation...\""
+    echo ""
+    echo "# Loop until a TTY is available"
+    echo "while ! who | grep -q 'pts'; do"
+    echo "sleep 2"
+    echo "done"
+    echo ""
+    echo "# Once we have a TTY, run the resume function"
+    echo "/home/pi/install.sh --resume"
+  } | sudo tee "$resume_file" >/dev/null
+  sudo chmod 644 "$resume_file"
+
+}
+start_install() {
+  local LOGSTAMP=$(date -u +"%Y%m%d_%H%M%SZ")
+  log "---"
+  log "--- started installation $LOGSTAMP"
+  log "---"
+
+#  up_raspi
+#  prerequisites
+#  inst_docker
+#  enable_docker
+  create_systemd_reboot
+#  create_systemd_resume
+  enable_systemd_reboot
+
+  log "[REBOOT] Preparing to reboot now..."
+  sudo reboot
 }
 
 resume_install() {
   log "[RESUME] Resuming installation inside active TTY."
 
-  sudo systemctl disable dins-resume.service > /dev/null
-  sudo rm -f "$PAUSE_FLAG"
+  sudo systemctl disable dins-wake.service > /dev/null
 
   if ! docker info 2>/dev/null | grep -q 'Swarm: active'; then
     log "[SWARM] Initializing Docker Swarm..."
@@ -155,9 +168,6 @@ resume_install() {
 }
 
 case "$1" in
-  --W|--wake)
-    reboot_pause
-    ;;
   --R|--resume)
     resume_install
     ;;
