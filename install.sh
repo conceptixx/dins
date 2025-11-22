@@ -15,6 +15,9 @@ SCRIPT_PATH="/home/pi/install.sh"
 SCRIPT_URL="https://raw.githubusercontent.com/conceptixx/dins/main/install.sh"
 NEXT_STATE=""
 SIMULATE=false
+ENABLE_WEBUI=false
+ENABLE_CONSOLE=false
+AUTO_EXECUTE=false
 
 log() {
   local msg="$(date '+%Y-%m-%d %H:%M:%S') - $1"
@@ -215,7 +218,7 @@ run_setup_image() {
   {
     echo "[OK] Run Docker Setup Image"
   } | sudo tee -a /tmp/motd.dins > /dev/null
-  NEXT_STATE="[--] Setup DINS System"
+  # NEXT_STATE="[--] Setup DINS System"
 }
 run_install_completed() {
   sudo mv /tmp/motd.backup /etc/motd
@@ -254,9 +257,26 @@ get_advertise_addr() {
 }
 
 main() {
-  if [[ "${1:-}" =~ (--S|--simulate) ]]; then
-    SIMULATE=true
-  fi
+# Parse parameters
+for arg in "$@"; do
+  case "$arg" in
+    --S|--s|--simulate)
+      SIMULATE=true
+      ;;
+    --W|--w|--webUI)
+      ENABLE_WEBUI=true
+      ;;
+    --C|--c|--console)
+      ENABLE_CONSOLE=true
+      ;;
+    --E|--e|--execute)
+      AUTO_EXECUTE=true
+      ;;
+    *)
+      echo "Unknown parameter: $arg"
+      ;;
+  esac
+done
 
   while true; do
     case $(cat ./state 2>/dev/null | xargs) in
@@ -291,7 +311,7 @@ main() {
         ;;
       run_setup_image)
         echo "setup_complete" > ./state
-        run_setup_image $SIMULATE
+        run_setup_image
         ;;
       setup_complete)
         echo "run_setup_image" > ./state
