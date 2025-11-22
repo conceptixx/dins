@@ -109,6 +109,8 @@ create_systemd_wakeup() {
     echo "#!/bin/bash"
     echo "# This script will wait for an SSH session and then resume the install"
     echo ""
+    echo 'echo "$(date "+%Y-%m-%d %H:%M:%S") - $1" >> "/home/pi/dins-install.log"'
+    echo ""
     echo "echo \"[DINS] Waiting for SSH session to resume installation...\""
     echo ""
     echo "# Loop until a TTY is available"
