@@ -155,7 +155,6 @@ start_install() {
 resume_install() {
   log "[RESUME] Resuming installation inside active TTY."
 
-
   if ! docker info 2>/dev/null | grep -q 'Swarm: active'; then
     log "[SWARM] Initializing Docker Swarm..."
     sudo docker swarm init || true
