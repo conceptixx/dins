@@ -189,6 +189,10 @@ run_setup_image() {
 
   IMAGE_NAME="ghcr.io/conceptixx/dins-setup:latest"
   log "[DOCKER] Starting main DINS setup container..."
+  log "         SIMULATE       $SIMULATE"
+  log "         ENABLE_WEBUI   $ENABLE_WEBUI"
+  log "         ENABLE_CONSOLE $ENABLE_CONSOLE"
+  log "         AUTO_EXECUTE   $AUTO_EXECUTE"
 
   sudo docker rm -f dins-setup >/dev/null 2>&1 || true
 
