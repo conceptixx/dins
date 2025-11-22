@@ -188,16 +188,29 @@ run_setup_image() {
     sudo docker rm dins-setup >/dev/null 2>&1 || true
   fi
 
-  # Run container with parameter flags as environment variables
-  sudo docker run -d --name dins-setup --restart unless-stopped \
-    --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
-    -e SIMULATE="$SIMULATE" \
-    -e ENABLE_WEBUI="$ENABLE_WEBUI" \
-    -e ENABLE_CONSOLE="$ENABLE_CONSOLE" \
-    -e AUTO_EXECUTE="$AUTO_EXECUTE" \
-    "$IMAGE_NAME" || {
-      log "[WARN] Installer container already running."
-    }
+  # If console mode is enabled, run interactively
+  if [ "$ENABLE_CONSOLE" = true ]; then
+    log "[MODE] Console mode active — attaching container output."
+    sudo docker run --rm -it \
+      --name dins-setup \
+      --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
+      -e SIMULATE="$SIMULATE" \
+      -e ENABLE_WEBUI="$ENABLE_WEBUI" \
+      -e ENABLE_CONSOLE="$ENABLE_CONSOLE" \
+      -e AUTO_EXECUTE="$AUTO_EXECUTE" \
+      "$IMAGE_NAME"
+  else
+    # Detached mode (background)
+    sudo docker run -d --name dins-setup --restart unless-stopped \
+      --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
+      -e SIMULATE="$SIMULATE" \
+      -e ENABLE_WEBUI="$ENABLE_WEBUI" \
+      -e ENABLE_CONSOLE="$ENABLE_CONSOLE" \
+      -e AUTO_EXECUTE="$AUTO_EXECUTE" \
+      "$IMAGE_NAME" || {
+        log "[WARN] Installer container already running."
+      }
+  fi
 
   {
     echo "[OK] Run Docker Setup Image"
