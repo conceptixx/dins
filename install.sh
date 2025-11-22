@@ -102,8 +102,9 @@ run_reboot() {
 }
 init_docker_swarm() {
   if ! docker info 2>/dev/null | grep -q 'Swarm: active'; then
-    log "[SWARM] Initializing Docker Swarm..."
-    sudo docker swarm init || true
+    IP_ADDR=$(get_advertise_addr)
+    log "[SWARM] Initializing Docker Swarm on $IP_ADDR ..."
+    sudo docker swarm init --advertise-addr "$IP_ADDR" || true
   else
     log "[SWARM] Docker Swarm already active."
   fi
@@ -138,6 +139,30 @@ run_install_completed() {
   sudo mv /tmp/motd.backup /etc/motd
   sudo rm /tmp/motd.backup
   sudo rm /tmp/motd.dins
+}
+get_advertise_addr() {
+  # Try to detect Ethernet (eth0) first
+  if ip link show eth0 2>/dev/null | grep -q "state UP"; then
+    ETH_IP=$(ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n 1)
+    if [ -n "$ETH_IP" ]; then
+      log "[NETWORK] Ethernet connected. Using $ETH_IP (eth0)"
+      echo "$ETH_IP"
+      return
+    fi
+  fi
+
+  # Fallback: use Wi-Fi IPv4
+  WLAN_IP=$(ip -4 addr show wlan0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n 1)
+  if [ -n "$WLAN_IP" ]; then
+    log "[NETWORK] Using Wi-Fi IP $WLAN_IP (wlan0)"
+    echo "$WLAN_IP"
+    return
+  fi
+
+  # Fallback: hostname IPv4
+  HOST_IP=$(hostname -I | awk '{print $1}')
+  log "[NETWORK] Defaulting to $HOST_IP (hostname -I)"
+  echo "$HOST_IP"
 }
 
 main() {
@@ -190,3 +215,5 @@ main() {
 }
 
 main
+
+
