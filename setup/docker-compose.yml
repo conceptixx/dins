@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  dins-setup:
+    build: .
+    container_name: dins-setup
+    restart: unless-stopped
+    volumes:
+      - /srv/docker/services:/mnt/dins
+    ports:
+      - "8080:8080"
