@@ -12,7 +12,15 @@ PAUSE_FLAG="/var/log/dins-wait-for-tty"
 SCRIPT_PATH="/home/pi/install.sh"
 WAKE_UNIT="/etc/systemd/system/dins-wake.service"
 RESUME_UNIT="/etc/systemd/system/dins-resume.service"
+SCRIPT_URL="https://raw.githubusercontent.com/conceptixx/dins/main/install.sh"
 
+# Save a persistent copy of this script if it doesn't already exist
+if [ ! -f "$SCRIPT_PATH" ]; then
+  echo "[DINS] Saving installer to $SCRIPT_PATH ..."
+  curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_PATH"
+  sudo chmod +x "$SCRIPT_PATH"
+  echo "[DINS] Installer persisted. Re-run with: sudo bash $SCRIPT_PATH"
+fi
 log() {
   if [ "$DEBUG" = true ]; then
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
