@@ -104,6 +104,10 @@ run_reboot() {
 init_docker_swarm() {
   if ! docker info 2>/dev/null | grep -q 'Swarm: active'; then
     IP_ADDR=$(get_advertise_addr)
+    if [[ -z "$IP_ADDR" ]]; then
+      log "[ERROR] No valid IP found for Docker Swarm. Skipping initialization."
+      return 1
+    fi
     log "[SWARM] Initializing Docker Swarm on $IP_ADDR ..."
     sudo docker swarm init --advertise-addr "$IP_ADDR" || true
   else
@@ -185,30 +189,35 @@ run_install_completed() {
   sudo rm /tmp/motd.dins
 }
 get_advertise_addr() {
-  # Try to detect Ethernet (eth0) first
-  if ip link show eth0 2>/dev/null | grep -q "state UP"; then
-    ETH_IP=$(ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n 1)
-    if [ -n "$ETH_IP" ]; then
-      log "[NETWORK] Ethernet connected. Using $ETH_IP (eth0)"
-      echo "$ETH_IP"
-      return
-    fi
+  # Try Ethernet first
+  ETH_IP=$(ip -4 addr show eth0 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1 | head -n1)
+  if [[ -n "$ETH_IP" ]]; then
+    log "[NETWORK] Ethernet connected. Using $ETH_IP (eth0)"
+    echo "$ETH_IP"
+    return
   fi
 
-  # Fallback: use Wi-Fi IPv4
-  WLAN_IP=$(ip -4 addr show wlan0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n 1)
-  if [ -n "$WLAN_IP" ]; then
+  # Then Wi-Fi
+  WLAN_IP=$(ip -4 addr show wlan0 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1 | head -n1)
+  if [[ -n "$WLAN_IP" ]]; then
     log "[NETWORK] Using Wi-Fi IP $WLAN_IP (wlan0)"
     echo "$WLAN_IP"
     return
   fi
 
-  # Fallback: hostname IPv4
-  HOST_IP=$(hostname -I | awk '{print $1}')
-  log "[NETWORK] Defaulting to $HOST_IP (hostname -I)"
-  echo "$HOST_IP"
-}
+  # Finally fallback to hostname -I
+  HOST_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+  if [[ -n "$HOST_IP" ]]; then
+    log "[NETWORK] Falling back to hostname IP $HOST_IP"
+    echo "$HOST_IP"
+    return
+  fi
 
+  # If nothing found, stop script safely
+  log "[ERROR] No network IP found! Aborting Swarm init."
+  echo ""
+  return 1
+}
 
 main() {
   if [[ "${1:-}" =~ (--S|--simulate) ]]; then
