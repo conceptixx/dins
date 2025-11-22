@@ -191,34 +191,32 @@ run_setup_image() {
   # Remove any existing container before starting
   sudo docker rm -f dins-setup >/dev/null 2>&1 || true
 
-  # Common Docker run options
-  local BASE_OPTS="--name dins-setup \
-    --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
-    -e SIMULATE=$SIMULATE \
-    -e ENABLE_WEBUI=$ENABLE_WEBUI \
-    -e ENABLE_CONSOLE=$ENABLE_CONSOLE \
-    -e AUTO_EXECUTE=$AUTO_EXECUTE"
+  # Common Docker run options (proper variable expansion with quotes)
+  local BASE_OPTS=(
+    --name dins-setup
+    --mount type=bind,src=/srv/docker/services,dst=/mnt/dins
+    -e "SIMULATE=${SIMULATE}"
+    -e "ENABLE_WEBUI=${ENABLE_WEBUI}"
+    -e "ENABLE_CONSOLE=${ENABLE_CONSOLE}"
+    -e "AUTO_EXECUTE=${AUTO_EXECUTE}"
+  )
 
   # Container run logic
   if [ "$ENABLE_CONSOLE" = true ] && [ "$AUTO_EXECUTE" = true ]; then
-    # Console + Execute (attached interactive mode)
     log "[MODE] Console execution mode — attaching now."
-    sudo docker run -it --rm $BASE_OPTS "$IMAGE_NAME"
+    sudo docker run -it --rm "${BASE_OPTS[@]}" "$IMAGE_NAME"
 
   elif [ "$ENABLE_CONSOLE" = true ]; then
-    # Console only (detached but attachable)
     log "[MODE] Console mode enabled (detached) — attach anytime with: sudo DINS-Setup"
-    sudo docker run -d $BASE_OPTS "$IMAGE_NAME"
+    sudo docker run -d "${BASE_OPTS[@]}" "$IMAGE_NAME"
 
   elif [ "$ENABLE_WEBUI" = true ]; then
-    # WebUI mode (persistent)
     log "[MODE] WebUI mode — running detached."
-    sudo docker run -d --restart unless-stopped $BASE_OPTS "$IMAGE_NAME"
+    sudo docker run -d --restart unless-stopped "${BASE_OPTS[@]}" "$IMAGE_NAME"
 
   else
-    # Default detached mode
     log "[MODE] Detached background mode."
-    sudo docker run -d --restart unless-stopped $BASE_OPTS "$IMAGE_NAME"
+    sudo docker run -d --restart unless-stopped "${BASE_OPTS[@]}" "$IMAGE_NAME"
   fi
 
   # Create the helper script for console re-attachment
@@ -240,15 +238,15 @@ run_setup_image() {
   log "[HELPER] DINS-Setup command available globally."
 
   # Clean up mode marker files (so next run starts fresh)
-#
-#
-#
-#
-#  rm -f ./simulate ./webUI ./console ./execute 2>/dev/null || true
-#
-#
-#
-#
+  #
+  #
+  #
+  #
+  #  rm -f ./simulate ./webUI ./console ./execute 2>/dev/null || true
+  #
+  #
+  #
+  #
 }
 run_install_completed() {
   sudo mv /tmp/motd.backup /etc/motd
