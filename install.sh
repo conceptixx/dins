@@ -78,7 +78,9 @@ start_install() {
     sudo chmod +x "$SCRIPT_PATH"
   fi
   # copy log in message
-  sudo cp /etc/motd /etc/motd.backup
+  if [ ! -f /etc/motd.backup ]; then
+    sudo cp /etc/motd /etc/motd.backup
+  fi
   sudo cp /etc/motd /tmp/motd.dins
   # create progress entries
   {
