@@ -22,8 +22,11 @@ if [ ! -f "$SCRIPT_PATH" ]; then
   echo "[DINS] Installer persisted. Re-run with: sudo bash $SCRIPT_PATH"
 fi
 log() {
+  local msg="$(date '+%Y-%m-%d %H:%M:%S') - $1"
   if [ "$DEBUG" = true ]; then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+    echo "$msg" | tee -a "$LOG_FILE"
+  else
+    echo "$msg" >> "$LOG_FILE"
   fi
 }
 
