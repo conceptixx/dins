@@ -158,7 +158,7 @@ run_setup_image() {
   fi
 
   # Run container with simulation flag
-  sudo docker run -d --name dins-installer --restart unless-stopped \
+  sudo docker run -d --name dins-setup --restart unless-stopped \
     --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
     -e SIMULATE="$SIMULATE" \
     "$IMAGE_NAME" || {
@@ -245,6 +245,10 @@ main() {
       run_setup_image)
         echo "setup_complete" > ./state
         run_setup_image $SIMULATE
+        ;;
+      setup_complete)
+        echo "run_setup_image" > ./state
+        break
         ;;
       run_install_completed)
         run_install_completed
