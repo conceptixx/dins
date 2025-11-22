@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # alternate
 ##!/bin/bash
-set -euo pipefail # - regular
 # alternate
-##set -e
+# set -euo pipefail # - regular
+set -e
 
 # ==============================
 # DINS INSTALLER
