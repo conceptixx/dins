@@ -103,7 +103,7 @@ run_reboot() {
 }
 init_docker_swarm() {
   if ! docker info 2>/dev/null | grep -q 'Swarm: active'; then
-    IP_ADDR=$(get_advertise_addr)
+    IP_ADDR=$(get_advertise_addr | tail -n1 | xargs)
     if [[ -z "$IP_ADDR" ]]; then
       log "[ERROR] No valid IP found for Docker Swarm. Skipping initialization."
       return 1
