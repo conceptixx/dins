@@ -325,8 +325,7 @@ done
         ;;
       *)
         # first call
-        #echo "up_raspi" > ./state
-        echo "pull_setup_image" > ./state
+        echo "up_raspi" > ./state
         start_install
         ;;
     esac
