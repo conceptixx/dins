@@ -145,38 +145,23 @@ pull_setup_image() {
   NEXT_STATE="[--] Running Setup Image"
 }
 run_setup_image() {
-  local SIMULATE=${1:-false}
+  IMAGE_NAME=${IMAGE_NAME:-"ghcr.io/conceptixx/dins-setup:latest"}
+  log "[DOCKER] Starting main DINS installer container..."
 
-  if [ "$SIMULATE" = true ]; then
-    log "[SIMULATION] Running simulated setup container..."
-    sudo docker run -d --name dins-setup-simulate --restart unless-stopped \
-      --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
-      -p 8081:8080 \
-      busybox sh -c "echo '[SIMULATION] DINS setup simulation running...'; sleep 3600"
-    {
-      echo "[OK] Simulated Setup Container started"
-    } | sudo tee -a /tmp/motd.dins > /dev/null
-    NEXT_STATE="[--] Simulated Setup DINS System"
-    return
+  # Ensure bind mount exists
+  if [ ! -d "/srv/docker/services" ]; then
+    log "[FS] Creating /srv/docker/services ..."
+    sudo mkdir -p /srv/docker/services
+    sudo chmod 777 /srv/docker/services
   fi
 
-  # Regular (real) setup containers
-  log "[DOCKER] Starting main DINS installer container..."
+  # Run container with simulation flag
   sudo docker run -d --name dins-installer --restart unless-stopped \
     --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
-    $IMAGE_NAME || log "[WARN] Installer container already running."
-
-  SETUP_IMAGE="ghcr.io/conceptixx/dins-setup:latest"
-  if ! sudo docker ps -a --format '{{.Names}}' | grep -q "^dins-setup$"; then
-    log "[DOCKER] Starting DINS setup container..."
-    sudo docker run -d --name dins-setup --restart unless-stopped \
-      --mount type=bind,src=/srv/docker/services,dst=/mnt/dins \
-      -p 8080:8080 \
-      $SETUP_IMAGE
-    log "[DOCKER] Setup container started successfully."
-  else
-    log "[DOCKER] DINS setup container already exists — skipping start."
-  fi
+    -e SIMULATE="$SIMULATE" \
+    "$IMAGE_NAME" || {
+      log "[WARN] Installer container already running."
+    }
 
   {
     echo "[OK] Run Docker Setup Image"
