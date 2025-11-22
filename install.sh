@@ -14,10 +14,6 @@ LOG_FILE="/home/pi/dins-install.log"
 SCRIPT_PATH="/home/pi/install.sh"
 SCRIPT_URL="https://raw.githubusercontent.com/conceptixx/dins/main/install.sh"
 NEXT_STATE=""
-SIMULATE=false
-ENABLE_WEBUI=false
-ENABLE_CONSOLE=false
-AUTO_EXECUTE=false
 
 log() {
   local msg="$(date '+%Y-%m-%d %H:%M:%S') - $1"
@@ -174,6 +170,23 @@ pull_setup_image() {
   NEXT_STATE="[--] Running Setup Image"
 }
 run_setup_image() {
+      local SIMULATE=false
+      local ENABLE_WEBUI=false
+      local ENABLE_CONSOLE=false
+      local AUTO_EXECUTE=false
+      if [ ! -f ./simulate ]; then
+        SIMULATE=true
+      fi
+      if [ ! -f ./webUI ]; then
+        ENABLE_WEBUI=true
+      fi
+      if [ ! -f ./console ]; then
+        ENABLE_CONSOLE=true
+      fi
+      if [ ! -f ./execute ]; then
+        AUTO_EXECUTE=true
+      fi
+
   IMAGE_NAME="ghcr.io/conceptixx/dins-setup:latest"
   log "[DOCKER] Starting main DINS setup container..."
 
@@ -263,16 +276,24 @@ main() {
 for arg in "$@"; do
   case "$arg" in
     --S|--s|--simulate)
-      SIMULATE=true
+      if [ ! -f ./simulate ]; then
+        touch ./simulate
+      fi
       ;;
     --W|--w|--webUI)
-      ENABLE_WEBUI=true
+      if [ ! -f ./webUI ]; then
+        touch ./webUI
+      fi
       ;;
     --C|--c|--console)
-      ENABLE_CONSOLE=true
+      if [ ! -f ./console ]; then
+        touch ./console
+      fi
       ;;
     --E|--e|--execute)
-      AUTO_EXECUTE=true
+      if [ ! -f ./execute ]; then
+        touch ./execute
+      fi
       ;;
     *)
       echo "Unknown parameter: $arg"
@@ -332,5 +353,5 @@ done
   done
 }
 
-main
+main "$@"
 # end of file
