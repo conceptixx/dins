@@ -6,6 +6,7 @@
 set -e
 # ==============================
 # --- paths
+SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
 SETUP_PATH="/srv/docker/services/setup"
 BOOTSTRAP_PATH="/tmp/etc/dins/setup"
 # --- files
@@ -263,13 +264,11 @@ run_initialize_ini() {
 # --- step 2
 setup_dins_command() {
   # === DINS Installation Paths ===
-  DINS_LIB="/usr/local/lib/dins"        # directory for subcommand scripts
-  DINS_HELPER="/usr/local/bin/dinser"   # main executable command
-  DINS_LOGS="/var/log/dins"
-  DINS_CONFIG="/opt/dins/config"
-  # --- Ensure base directories exist ---
-  sudo mkdir -p "$DINS_LIB" "$DINS_LOGS" "$DINS_CONFIG"
-  sudo chmod -R 755 "$DINS_LIB"
+  DINS_HELPER="$USR_PATH/local/bin/dins/dinser"   # main executable command
+  DINS_CONFIG="$OPT_PAT/config"
+# --- Ensure base directories exist ---
+  __exec_mkdir "path" "$DINS_CONFIG"
+  sudo chmod -R 755 "$BIN_PATH"
   # --- Create the global 'dins' command ---
   {
     echo '#!/bin/bash'
@@ -295,8 +294,24 @@ setup_dins_command() {
     echo 'fi'
   } | sudo tee "$DINS_HELPER" >/dev/null
   sudo chmod +x "$DINS_HELPER"
-  sudo cp "$BOOTSTRAP_PATH/$(basename "$0")" "$DINS_LIB/setup.sh"
-  sudo chmod +x "$DINS_LIB/setup.sh"
+  sudo cp "$BOOTSTRAP_PATH/$(basename "$0")" "$BIN_PATH/setup.sh"
+  sudo chmod +x "$BIN_PATH/setup.sh"
+  # --- release (only temporary command)
+  DINS_RELEASE="$BIN_PATH/release.sh"
+    {
+    echo '#!/bin/bash'
+    echo 'sudo rm $SCRIPT_PATH/state'
+    echo 'sudo rm $SCRIPT_PATH/install.sh'
+    echo 'sudo rm $BOOTSTRAP_PATH/install.sh'
+    echo 'sudo rm $DINS_LIB/setup.sh'
+    echo 'sudo docker stop dins-setup 2>/dev/null || true'
+    echo 'sudo docker rm dins-setup 2>/dev/null || true'
+
+    echo ''
+    echo ''
+    echo ''
+  } | sudo tee "$DINS_RELEASE" >/dev/null
+  sudo chmod +x "$DINS_RELEASE"
   __set_state "up_raspi" "[--] update and upgrade raspberry pi os packages"
 }
 # --- step 3
