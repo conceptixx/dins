@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# alternate
+# alternatevvv
 ##!/bin/bash
 # alternate
 # set -euo pipefail # - regular
