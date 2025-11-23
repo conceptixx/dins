@@ -25,8 +25,12 @@ __log() {
   local MODE="${2:-append}"
   local LOG_MSG="$(date '+%Y-%m-%d %H:%M:%S') - $1"
   case "$MODE" in
-    open) sudo echo "$LOG_MSG" > "$LOG_FILE" ;;
-    append) sudo echo "$LOG_MSG" >> "$LOG_FILE" ;;
+    open)
+      sudo echo "$LOG_MSG" > "$LOG_FILE"
+      ;;
+    append)
+      sudo echo "$LOG_MSG" >> "$LOG_FILE"
+      ;;
   esac
 }
 # --- __exec_mkdir()
