@@ -452,6 +452,7 @@ echo "sudo touch $SCRIPT_DIR/SIMULATE"
   fi
   # Check if simulation flag file exists
   if [[ -f "$SCRIPT_DIR/SIMULATE" ]]; then
+echo "IS_SIMULATE"  
     IS_SIMULATED="true"
   fi
 
