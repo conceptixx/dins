@@ -447,6 +447,7 @@ echo "started"
   local parse_opt="$1"
   # Check if simulation flag was provided
   if [[ "$parse_opt" =~ ^(-s|-S|--simulate)$ ]]; then
+echo "sudo touch $SCRIPT_DIR/SIMULATE"  
     sudo touch "$SCRIPT_DIR/SIMULATE"
   fi
   # Check if simulation flag file exists
