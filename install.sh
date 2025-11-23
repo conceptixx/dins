@@ -33,10 +33,11 @@ __log() {
 __exec_mkdir() {
   local key="$1"
   local path="$2"
+echo "debug $key > $path"
   # check if base or path (path can be /tmp prefixed)
   case $key in
     path)
-      path="${IS_SIMULATED:+/tmp}$path"
+      path="$path"
       ;;
     base)
       ;;
