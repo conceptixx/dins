@@ -190,7 +190,7 @@ __set_placeholder() {
 
   # Export a real shell variable dynamically
   eval "export ${VARNAME}=\"${PATHNAME}\""
-  log "[PLACEHOLDER] Registered: \${$VARNAME} → $PATHNAME"
+  __log "[PLACEHOLDER] Registered: \${$VARNAME} → $PATHNAME"
 }
 # --- __reboot_triggered()
 __reboot_triggered() {
