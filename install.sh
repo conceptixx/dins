@@ -452,7 +452,7 @@ main() {
   fi
 
   while true; do
-    case "$(xargs < ./state 2>/dev/null)" in
+    case "$(xargs < "$STATE_FILE" 2>/dev/null)" in
       # --- step 1
       run_initialize_ini) run_initialize_ini ;;
       # --- step 2
