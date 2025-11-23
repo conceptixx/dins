@@ -210,7 +210,8 @@ start_install() {
   if [ ! -f "$SCRIPT_FILE" ]; then
     echo "[DINS] Saving installer to $SCRIPT_FILE ..."
     curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_FILE"
-    sudo chmod +x "$SCRIPT_FILE"
+echo "[$SCRIPT_URL] [$SCRIPT_FILE]"
+#    sudo chmod +x "$SCRIPT_FILE"
   fi
   # start log file
   __log "---\n--- started installation $LOGSTAMP\n---" "open"
