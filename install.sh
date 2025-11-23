@@ -233,7 +233,7 @@ run_initialize_ini() {
   __log "[INIT] Reading $INIT_TMP ..."
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=$(echo "$line" | xargs)
-    [[ -z "$line" || "$line" =~ ^#|^; ]] && continue
+    [[ -z "$line" || "$line" =~ ^(#|;) ]] && continue
     # Section header
     if [[ "$line" =~ ^\[(.*)\]$ ]]; then
       MODE=$(echo "${BASH_REMATCH[1]}" | cut -d':' -f1)
