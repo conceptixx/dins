@@ -33,7 +33,6 @@ __log() {
 __exec_mkdir() {
   local key="$1"
   local path="$2"
-echo "debug $key > $path"
   # check if base or path (path can be /tmp prefixed)
   case $key in
     path)
@@ -226,7 +225,7 @@ run_initialize_ini() {
   local MODE=""
   local SUBMODE=""
   __log "[INIT] Fetching initialize.ini from $INIT_FILE_URL ..."
-  __exec_mkdir "/tmp/etc/dins/setup"
+  __exec_mkdir "path" "/tmp/etc/dins/setup"
   curl -fsSL "$INIT_FILE_URL" -o "$INIT_TMP"
   if [ ! -s "$INIT_TMP" ]; then
     __log "[ERROR] Failed to fetch initialize.ini from $INIT_FILE_URL"
@@ -442,22 +441,17 @@ run_install_completed() {
 }
 # --- main()
 main() {
-echo "started"
-# Parse parameters
+  # Parse parameters
   local parse_opt="$1"
   # Check if simulation flag was provided
   if [[ "$parse_opt" =~ ^(-s|-S|--simulate)$ ]]; then
-echo "sudo touch $SCRIPT_DIR/SIMULATE"  
     sudo touch "$SCRIPT_DIR/SIMULATE"
   fi
   # Check if simulation flag file exists
   if [[ -f "$SCRIPT_DIR/SIMULATE" ]]; then
-echo "IS_SIMULATE"  
     IS_SIMULATED="true"
   fi
 
-echo "debug statefile $STATE_FILE"
-exit 1
   while true; do
     case "$(xargs < "$STATE_FILE" 2>/dev/null)" in
       # --- step 1
@@ -485,6 +479,5 @@ exit 1
     esac  done
 }
 # start main function
-echo "1. start main"
 main "$@"
 # end of file
