@@ -6,11 +6,10 @@
 set -e
 # ==============================
 # --- paths
-SCRIPT_PATH="/home/pi"
 SETUP_PATH="/srv/docker/services/setup"
 BOOTSTRAP_PATH="/tmp/etc/dins/setup"
 # --- files
-SCRIPT_FILE="${SCRIPT_PATH}/install.sh"
+SCRIPT_FILE="$(readlink -f "$0")"
 LOG_FILE="${SCRIPT_PATH}/dins-install.log"
 STATE_FILE="${SCRIPT_PATH}/STATE"
 # --- variables
@@ -206,11 +205,11 @@ start_install() {
   local LOGSTAMP=$(date -u +"%Y%m%d_%H%M%SZ")
   echo "[DINS] Installation started\n------------------------------------------------------------"
   # Save a persistent copy of this script if it doesn't already exist
-  if [ ! -f "$SCRIPT_FILE" ]; then
+#  if [ ! -f "$SCRIPT_FILE" ]; then
     echo "[DINS] Saving installer to $SCRIPT_FILE ..."
     curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_FILE"
     sudo chmod +x "$SCRIPT_FILE"
-  fi
+#  fi
   # start log file
   __log "---\n--- started installation $LOGSTAMP\n---" "open"
   # init login messenger
@@ -296,6 +295,8 @@ setup_dins_command() {
     echo 'fi'
   } | sudo tee "$DINS_HELPER" >/dev/null
   sudo chmod +x "$DINS_HELPER"
+  sudo cp "$BOOTSTRAP_PATH/$(basename "$0")" "$DINS_LIB/setup.sh"
+  sudo chmod +x "$DINS_LIB/setup.sh"
   __set_state "up_raspi" "[--] update and upgrade raspberry pi os packages"
 }
 # --- step 3
