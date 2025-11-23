@@ -269,8 +269,7 @@ setup_dins_command() {
   DINS_CONFIG="$OPT_PAT/config"
 # --- Ensure base directories exist ---
   __exec_mkdir "path" "$DINS_CONFIG"
-  echo "[$DINS_HELPER] [$DINS_CONFIG]"
-#sudo chmod -R 755 "$BIN_PATH"
+  sudo chmod -R 755 "$BIN_PATH"
   # --- Create the global 'dins' command ---
   {
     echo '#!/bin/bash'
@@ -456,27 +455,27 @@ main() {
   while true; do
     case "$(xargs < "$STATE_FILE" 2>/dev/null)" in
       # --- step 1
-      run_initialize_ini) run_initialize_ini ;;
+      run_initialize_ini) run_initialize_ini ; exit 1 ;;
       # --- step 2
-      setup_dins_command) setup_dins_command ;;
+      setup_dins_command) setup_dins_command ; exit 1 ;;
       # --- step 3
-      up_raspi) up_raspi ;;
+      up_raspi) up_raspi ; exit 1 ;;
       # --- step 4
-      prerequisites) prerequisites ;;
+      prerequisites) prerequisites ; exit 1 ;;
       # --- step 5
-      inst_docker) inst_docker ;;
+      inst_docker) inst_docker ; exit 1 ;;
       # --- step 6
-      enable_docker) enable_docker ;;
+      enable_docker) enable_docker ; exit 1 ;;
       # --- step 7
-      init_docker_swarm) init_docker_swarm ;;
+      init_docker_swarm) init_docker_swarm ; exit 1 ;;
       # --- step 8
-      pull_setup_image) pull_setup_image ;;
+      pull_setup_image) pull_setup_image ; exit 1 ;;
       # --- step 9
-      run_setup_image) run_setup_image ;;
+      run_setup_image) run_setup_image ; exit 1 ;;
       # --- step 10
-      run_install_completed) run_install_completed; break ;;
+      run_install_completed) run_install_completed; break ; exit 1 ;;
       # --- starting
-      *) start_install ;;
+      *) start_install ; exit 1 ;;
     esac  done
 }
 # start main function
