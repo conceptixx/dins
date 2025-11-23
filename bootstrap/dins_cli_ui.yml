@@ -1,0 +1,25 @@
+  dins_cli_ui:
+    image: ghcr.io/conceptixx/dins-cli-ui:latest
+    deploy:
+      mode: replicated
+      replicas: 0            # not automatically started
+    hostname: dins-cli-ui
+    networks:
+      - dins_internal
+    volumes:
+      - {$OPT_PATH%}/dins_cli_ui/config:/app/config
+      - {$OPT_PATH%}/dins_cli_ui/data:/app/data
+      - {$OPT_PATH%}/dins_confighandler/shared/dins_cli_ui:/opt/dins/confighandler/shared/dins_cli_ui
+      - {$LOG_PATH%}/dins_cli_ui:/var/log/cli-ui
+    environment:
+      - DINS_ROLE=cli
+      - CONFIG_HANDLER_API=http://dins-confighandler:5000
+      - TERM=xterm-256color
+    tty: true
+    stdin_open: true
+    restart: "no"
+    healthcheck:
+      test: ["CMD-SHELL", "echo ok"]
+      interval: 1m
+      timeout: 5s
+      retries: 1

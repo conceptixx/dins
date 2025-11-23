@@ -1,0 +1,24 @@
+  dins_avahi:
+    image: ghcr.io/linuxserver/avahi:latest
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+    hostname: dins-avahi
+    network_mode: host
+    volumes:
+      - {$VAR_PATH%}/run/dbus:/var/run/dbus
+      - {$OPT_PATH%}/dins_avahi/services:/etc/avahi/services
+      - {$LOG_PATH%}/dins_avahi:/var/log/avahi
+    environment:
+      - AVAHI_NAME=dins-config
+      - AVAHI_DOMAIN=local
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep avahi-daemon || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
