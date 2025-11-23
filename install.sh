@@ -207,11 +207,11 @@ start_install() {
   local LOGSTAMP=$(date -u +"%Y%m%d_%H%M%SZ")
   echo "[DINS] Installation started\n------------------------------------------------------------"
   # Save a persistent copy of this script if it doesn't already exist
-#  if [ ! -f "$SCRIPT_FILE" ]; then
+  if [ ! -f "$SCRIPT_FILE" ]; then
     echo "[DINS] Saving installer to $SCRIPT_FILE ..."
     curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_FILE"
     sudo chmod +x "$SCRIPT_FILE"
-#  fi
+  fi
   # start log file
   __log "---\n--- started installation $LOGSTAMP\n---" "open"
   # init login messenger
