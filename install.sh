@@ -123,6 +123,7 @@ __set_state() {
   local STATE="$1"
   NEXT_STATE="$2"
   echo "${STATE}" > "$STATE_FILE"
+  echo "DEBUG ${STATE} > $STATE_FILE"
   __reboot_triggered
 }
 # --- __clear_state()
