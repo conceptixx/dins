@@ -481,5 +481,6 @@ echo "started"
     esac  done
 }
 # start main function
+echo "1. start main"
 main "$@"
 # end of file
