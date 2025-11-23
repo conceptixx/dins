@@ -442,6 +442,7 @@ run_install_completed() {
 }
 # --- main()
 main() {
+echo "started"
 # Parse parameters
   local parse_opt="$1"
   # Check if simulation flag was provided
