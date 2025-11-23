@@ -6,7 +6,7 @@
 set -e
 # ==============================
 # --- paths
-SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
+SCRIPT_PATH=""
 SETUP_PATH="/srv/docker/services/setup"
 BOOTSTRAP_PATH="/tmp/etc/dins/setup"
 # --- files
@@ -212,6 +212,7 @@ start_install() {
     curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_FILE"
     sudo chmod +x "$SCRIPT_FILE"
   fi
+  SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
   # start log file
   __log "---\n--- started installation $LOGSTAMP\n---" "open"
   # init login messenger
@@ -455,27 +456,27 @@ main() {
   while true; do
     case "$(xargs < "$STATE_FILE" 2>/dev/null)" in
       # --- step 1
-      run_initialize_ini) run_initialize_ini ; exit 1 ;;
+      run_initialize_ini) run_initialize_ini ;;
       # --- step 2
-      setup_dins_command) setup_dins_command ; exit 1 ;;
+      setup_dins_command) setup_dins_command ;;
       # --- step 3
-      up_raspi) up_raspi ; exit 1 ;;
+      up_raspi) up_raspi ;;
       # --- step 4
-      prerequisites) prerequisites ; exit 1 ;;
+      prerequisites) prerequisites ;;
       # --- step 5
-      inst_docker) inst_docker ; exit 1 ;;
+      inst_docker) inst_docker ;;
       # --- step 6
-      enable_docker) enable_docker ; exit 1 ;;
+      enable_docker) enable_docker ;;
       # --- step 7
-      init_docker_swarm) init_docker_swarm ; exit 1 ;;
+      init_docker_swarm) init_docker_swarm ;;
       # --- step 8
-      pull_setup_image) pull_setup_image ; exit 1 ;;
+      pull_setup_image) pull_setup_image ;;
       # --- step 9
-      run_setup_image) run_setup_image ; exit 1 ;;
+      run_setup_image) run_setup_image ;;
       # --- step 10
-      run_install_completed) run_install_completed; break ; exit 1 ;;
+      run_install_completed) run_install_completed; break ;;
       # --- starting
-      *) start_install ; exit 1 ;;
+      *) start_install ;;
     esac  done
 }
 # start main function
