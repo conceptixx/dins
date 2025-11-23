@@ -300,14 +300,18 @@ setup_dins_command() {
   DINS_RELEASE="$BIN_PATH/release.sh"
     {
     echo '#!/bin/bash'
+    echo ''
+    echo '# remove state file'
     echo 'sudo rm $SCRIPT_PATH/state'
+    echo '# remove srcipt - regular /home/pi/install.sh'
     echo 'sudo rm $SCRIPT_PATH/install.sh'
+    echo '# remove script file from bootstrap path'
     echo 'sudo rm $BOOTSTRAP_PATH/install.sh'
+    echo '# remove setup.sh from dinser command'
     echo 'sudo rm $DINS_LIB/setup.sh'
+    echo '# stop and remove dins-setup service from docker'
     echo 'sudo docker stop dins-setup 2>/dev/null || true'
     echo 'sudo docker rm dins-setup 2>/dev/null || true'
-
-    echo ''
     echo ''
     echo ''
   } | sudo tee "$DINS_RELEASE" >/dev/null
