@@ -210,8 +210,7 @@ start_install() {
   if [ ! -f "$SCRIPT_FILE" ]; then
     echo "[DINS] Saving installer to $SCRIPT_FILE ..."
     curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_FILE"
-echo "[$SCRIPT_URL] [$SCRIPT_FILE]"
-#    sudo chmod +x "$SCRIPT_FILE"
+    sudo chmod +x "$SCRIPT_FILE"
   fi
   # start log file
   __log "---\n--- started installation $LOGSTAMP\n---" "open"
@@ -270,7 +269,8 @@ setup_dins_command() {
   DINS_CONFIG="$OPT_PAT/config"
 # --- Ensure base directories exist ---
   __exec_mkdir "path" "$DINS_CONFIG"
-  sudo chmod -R 755 "$BIN_PATH"
+  echo "[$DINS_HELPER] [$DINS_CONFIG]"
+#sudo chmod -R 755 "$BIN_PATH"
   # --- Create the global 'dins' command ---
   {
     echo '#!/bin/bash'
