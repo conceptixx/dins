@@ -457,7 +457,7 @@ echo "IS_SIMULATE"
   fi
 
 echo "debug statefile $STATE_FILE"
-exit 0
+exit 1
   while true; do
     case "$(xargs < "$STATE_FILE" 2>/dev/null)" in
       # --- step 1
