@@ -1,0 +1,82 @@
+# =============================================================================
+# DINS Setup Service - Dockerfile
+# =============================================================================
+# This Dockerfile builds the setup service container for DINS
+# The service handles setup operations triggered by 'dinser setup'
+# =============================================================================
+
+FROM alpine:3.18
+
+LABEL maintainer="DINS Project"
+LABEL description="DINS Setup Service Container"
+LABEL version="1.0.0"
+
+# Install required packages
+RUN apk add --no-cache \
+    bash \
+    curl \
+    wget \
+    jq \
+    docker-cli \
+    python3 \
+    py3-pip \
+    ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+# Create dins user and directories
+RUN addgroup -g 1000 dins \
+    && adduser -u 1000 -G dins -h /opt/dins -s /bin/bash -D dins \
+    && mkdir -p /opt/dins/config \
+    && mkdir -p /opt/dins/logs \
+    && mkdir -p /opt/dins/scripts \
+    && mkdir -p /data \
+    && chown -R dins:dins /opt/dins /data
+
+# Set working directory
+WORKDIR /opt/dins
+
+# Copy setup scripts
+COPY --chown=dins:dins scripts/ /opt/dins/scripts/
+
+# Create health check endpoint script
+RUN mkdir -p /opt/dins/bin && \
+    echo '#!/bin/bash' > /opt/dins/bin/health-check.sh && \
+    echo 'echo "OK"' >> /opt/dins/bin/health-check.sh && \
+    chmod +x /opt/dins/bin/health-check.sh
+
+# Create entrypoint script
+RUN echo '#!/bin/bash' > /opt/dins/bin/entrypoint.sh && \
+    echo 'set -e' >> /opt/dins/bin/entrypoint.sh && \
+    echo '' >> /opt/dins/bin/entrypoint.sh && \
+    echo '# Log startup' >> /opt/dins/bin/entrypoint.sh && \
+    echo 'echo "[$(date)] DINS Setup Service starting..."' >> /opt/dins/bin/entrypoint.sh && \
+    echo '' >> /opt/dins/bin/entrypoint.sh && \
+    echo '# Keep container running' >> /opt/dins/bin/entrypoint.sh && \
+    echo 'echo "[$(date)] DINS Setup Service ready"' >> /opt/dins/bin/entrypoint.sh && \
+    echo '' >> /opt/dins/bin/entrypoint.sh && \
+    echo '# Execute passed command or wait' >> /opt/dins/bin/entrypoint.sh && \
+    echo 'if [ $# -gt 0 ]; then' >> /opt/dins/bin/entrypoint.sh && \
+    echo '    exec "$@"' >> /opt/dins/bin/entrypoint.sh && \
+    echo 'else' >> /opt/dins/bin/entrypoint.sh && \
+    echo '    # Keep container running for setup requests' >> /opt/dins/bin/entrypoint.sh && \
+    echo '    tail -f /dev/null' >> /opt/dins/bin/entrypoint.sh && \
+    echo 'fi' >> /opt/dins/bin/entrypoint.sh && \
+    chmod +x /opt/dins/bin/entrypoint.sh
+
+# Set environment variables
+ENV DINS_BASE_DIR=/opt/dins
+ENV DINS_CONFIG_DIR=/opt/dins/config
+ENV DINS_LOG_DIR=/opt/dins/logs
+ENV PATH="/opt/dins/bin:${PATH}"
+
+# Switch to dins user
+USER dins
+
+# Expose port for health checks (optional)
+EXPOSE 8080
+
+# Set entrypoint
+ENTRYPOINT ["/opt/dins/bin/entrypoint.sh"]
+
+# Default command
+CMD []

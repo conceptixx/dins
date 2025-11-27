@@ -1,0 +1,273 @@
+; =============================================================================
+; DINS Installation Manifest
+; =============================================================================
+; This manifest describes all installation steps for the DINS system
+; Version: 1.0.0
+; =============================================================================
+
+; =============================================================================
+; PHASE 1: System Preparation
+; =============================================================================
+
+[preparation:prepare_the_system_for_the_installation]
+  ; Update package lists
+  run_cmd:run_sudo_command_for_update
+    prompt="apt-get update -qq -y > /dev/null 2>&1 || true"
+    sudo="true"
+    description="Update package lists"
+
+  ; Upgrade installed packages
+  run_cmd:sudo:prompt="apt-get upgrade -qq -y > /dev/null 2>&1 || true"
+
+  ; Install required dependencies
+  run_cmd:install_dependencies
+    prompt="apt-get install -qq -y curl wget git jq > /dev/null 2>&1 || true"
+    sudo="true"
+    description="Install required dependencies"
+
+; =============================================================================
+; PHASE 2: Runtime Environment Setup
+; =============================================================================
+
+[base:define_base_dir]
+  ; Create the base DINS directory
+  mkdir:create_base_directory
+    path="/opt/dins"
+    mode="755"
+    sudo="true"
+  
+  ; Set BASE_DIR global variable
+  set_var:set_base_dir
+    name="BASE_DIR"
+    value="/opt/dins"
+
+[directories:create_directory_structure]
+  ; Create system directories
+  mkdir:create_system_dir
+    path="{%BASE_DIR%}/system"
+    mode="750"
+    sudo="true"
+
+  mkdir:create_scripts_dir
+    path="{%BASE_DIR%}/scripts"
+    mode="755"
+    sudo="true"
+
+  mkdir:create_scripts_system_dir
+    path="{%BASE_DIR%}/scripts/system"
+    mode="755"
+    sudo="true"
+
+  mkdir:create_scripts_fileinfo_dir
+    path="{%BASE_DIR%}/scripts/system/fileinfo"
+    mode="755"
+    sudo="true"
+
+  mkdir:create_scripts_validate_dir
+    path="{%BASE_DIR%}/scripts/system/validate"
+    mode="755"
+    sudo="true"
+
+  ; Create service directories
+  mkdir:create_services_dir
+    path="{%BASE_DIR%}/services"
+    mode="755"
+    sudo="true"
+
+  ; Create log directory
+  mkdir:create_log_dir
+    path="{%BASE_DIR%}/logs"
+    mode="755"
+    sudo="true"
+
+  ; Create config directory
+  mkdir:create_config_dir
+    path="{%BASE_DIR%}/config"
+    mode="750"
+    sudo="true"
+
+  ; Create temp directory
+  mkdir:create_temp_dir
+    path="{%BASE_DIR%}/tmp"
+    mode="1777"
+    sudo="true"
+
+  ; Create CLI directory structure
+  mkdir:create_cli_dir
+    path="{%BASE_DIR%}/cli"
+    mode="755"
+    sudo="true"
+
+  mkdir:create_cli_dins_dir
+    path="{%BASE_DIR%}/cli/dins"
+    mode="755"
+    sudo="true"
+
+[copy_modules:copy_function_modules]
+  ; Copy function modules to runtime location
+  copy:copy_mkdir_module
+    source="{%SETUP_DIR%}/_mkdir.sh"
+    dest="{%BASE_DIR%}/scripts/system/fileinfo/_mkdir.sh"
+    mode="755"
+    sudo="true"
+
+  copy:copy_copy_module
+    source="{%SETUP_DIR%}/_copy.sh"
+    dest="{%BASE_DIR%}/scripts/system/fileinfo/_copy.sh"
+    mode="755"
+    sudo="true"
+
+  copy:copy_chmod_module
+    source="{%SETUP_DIR%}/_chmod.sh"
+    dest="{%BASE_DIR%}/scripts/system/fileinfo/_chmod.sh"
+    mode="755"
+    sudo="true"
+
+  copy:copy_chuser_module
+    source="{%SETUP_DIR%}/_chuser.sh"
+    dest="{%BASE_DIR%}/scripts/system/fileinfo/_chuser.sh"
+    mode="755"
+    sudo="true"
+
+  copy:copy_chgroup_module
+    source="{%SETUP_DIR%}/_chgroup.sh"
+    dest="{%BASE_DIR%}/scripts/system/fileinfo/_chgroup.sh"
+    mode="755"
+    sudo="true"
+
+  copy:copy_run_cmd_module
+    source="{%SETUP_DIR%}/_run_cmd.sh"
+    dest="{%BASE_DIR%}/scripts/system/fileinfo/_run_cmd.sh"
+    mode="755"
+    sudo="true"
+
+[copy_validators:copy_validator_modules]
+  ; Copy validator modules to runtime location
+  copy:copy_path_validator
+    source="{%SETUP_DIR%}/_validate_path.sh"
+    dest="{%BASE_DIR%}/scripts/system/validate/_validate_path.sh"
+    mode="755"
+    sudo="true"
+
+  copy:copy_file_validator
+    source="{%SETUP_DIR%}/_validate_file.sh"
+    dest="{%BASE_DIR%}/scripts/system/validate/_validate_file.sh"
+    mode="755"
+    sudo="true"
+
+  copy:copy_chmod_mode_validator
+    source="{%SETUP_DIR%}/_validate_chmod_mode.sh"
+    dest="{%BASE_DIR%}/scripts/system/validate/_validate_chmod_mode.sh"
+    mode="755"
+    sudo="true"
+
+; =============================================================================
+; PHASE 3: Docker Swarm Setup
+; =============================================================================
+
+[docker:install_docker]
+  ; Check if Docker is installed, install if not
+  run_cmd:check_docker
+    prompt="command -v docker > /dev/null 2>&1 || curl -fsSL https://get.docker.com | sh"
+    sudo="true"
+    description="Install Docker if not present"
+
+  ; Add current user to docker group
+  run_cmd:add_docker_group
+    prompt="usermod -aG docker $USER || true"
+    sudo="true"
+    description="Add user to docker group"
+
+[docker_swarm:initialize_swarm]
+  ; Initialize Docker Swarm if not already initialized
+  run_cmd:init_swarm
+    prompt="docker info 2>/dev/null | grep -q 'Swarm: active' || docker swarm init --advertise-addr 127.0.0.1 2>/dev/null || true"
+    sudo="true"
+    description="Initialize Docker Swarm"
+
+; =============================================================================
+; PHASE 4: Setup Docker Service Deployment
+; =============================================================================
+
+[docker_setup_service:create_setup_service_files]
+  ; Create docker-compose file for setup service
+  copy:copy_setup_compose
+    source="{%SETUP_DIR%}/docker/docker-compose.setup.yml"
+    dest="{%BASE_DIR%}/config/docker-compose.setup.yml"
+    mode="644"
+    sudo="true"
+
+  ; Create Dockerfile for setup service
+  copy:copy_setup_dockerfile
+    source="{%SETUP_DIR%}/docker/Dockerfile.setup"
+    dest="{%BASE_DIR%}/config/Dockerfile.setup"
+    mode="644"
+    sudo="true"
+
+[docker_setup_service:deploy_setup_service]
+  ; Deploy the setup service stack
+  run_cmd:deploy_setup_stack
+    prompt="cd {%BASE_DIR%}/config && docker stack deploy -c docker-compose.setup.yml dins-setup 2>/dev/null || docker-compose -f docker-compose.setup.yml up -d 2>/dev/null || true"
+    sudo="true"
+    description="Deploy DINS setup service"
+
+; =============================================================================
+; PHASE 5: DINSER CLI Installation
+; =============================================================================
+
+[dinser:install_dinser_cli]
+  ; Copy the dinser executable
+  copy:copy_dinser
+    source="{%SETUP_DIR%}/cli/dinser"
+    dest="{%BASE_DIR%}/cli/dins/dinser"
+    mode="755"
+    sudo="true"
+
+  ; Copy setup.sh for dinser
+  copy:copy_dinser_setup
+    source="{%SETUP_DIR%}/cli/setup.sh"
+    dest="{%BASE_DIR%}/cli/dins/setup.sh"
+    mode="755"
+    sudo="true"
+
+  ; Create symlink in /usr/local/bin
+  run_cmd:create_dinser_symlink
+    prompt="ln -sf {%BASE_DIR%}/cli/dins/dinser /usr/local/bin/dinser"
+    sudo="true"
+    description="Create dinser symlink"
+
+[permissions:set_final_permissions]
+  ; Set ownership for system directory (root:admin)
+  chuser:set_system_owner
+    path="{%BASE_DIR%}/system"
+    user="root"
+    recursive="true"
+    sudo="true"
+
+  chgroup:set_system_group
+    path="{%BASE_DIR%}/system"
+    group="root"
+    recursive="true"
+    sudo="true"
+
+  ; Set permissions for config directory
+  chmod:set_config_permissions
+    path="{%BASE_DIR%}/config"
+    mode="750"
+    recursive="true"
+    sudo="true"
+
+; =============================================================================
+; PHASE 6: Final Setup Routine
+; =============================================================================
+
+[finalize:run_final_setup]
+  ; Execute the final setup routine via dinser
+  run_cmd:run_dinser_setup
+    prompt="{%BASE_DIR%}/cli/dins/dinser setup --init"
+    description="Run final DINSER setup routine"
+
+  ; Display completion message
+  run_cmd:show_completion
+    prompt="echo 'DINS installation completed successfully. Use dinser --help for usage information.'"
+    description="Show completion message"

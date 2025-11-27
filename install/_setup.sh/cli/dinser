@@ -1,0 +1,409 @@
+#!/usr/bin/env bash
+# =============================================================================
+# DINSER - DINS Execution Resolver
+# Main CLI entry point for DINS commands
+# =============================================================================
+# Usage: dinser <command> [subcommand] [parameters...]
+# 
+# Commands:
+#   setup [options]     - Run setup operations
+#   status              - Show DINS status
+#   version             - Show version information
+#   help                - Show help
+# =============================================================================
+
+set -euo pipefail
+
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+
+readonly DINSER_VERSION="1.0.0"
+readonly SCRIPT_NAME="$(basename "$0")"
+
+# Determine BASE_DIR
+# First check if DINS_BASE_DIR is set, otherwise use default
+if [[ -n "${DINS_BASE_DIR:-}" ]]; then
+    readonly BASE_DIR="$DINS_BASE_DIR"
+elif [[ -f "/opt/dins/cli/dins/dinser" ]]; then
+    readonly BASE_DIR="/opt/dins"
+else
+    # Fallback: determine from script location
+    readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    readonly BASE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+fi
+
+readonly CLI_DIR="${BASE_DIR}/cli/dins"
+readonly CONFIG_DIR="${BASE_DIR}/config"
+readonly LOG_DIR="${BASE_DIR}/logs"
+
+# =============================================================================
+# UTILITY FUNCTIONS
+# =============================================================================
+
+log() {
+    echo "[dinser] $*"
+}
+
+log_error() {
+    echo "[dinser] ERROR: $*" >&2
+}
+
+log_debug() {
+    if [[ "${DEBUG:-0}" == "1" ]]; then
+        echo "[dinser] DEBUG: $*"
+    fi
+}
+
+# =============================================================================
+# COMMAND: help
+# =============================================================================
+
+show_help() {
+    cat << EOF
+DINSER - DINS Execution Resolver v${DINSER_VERSION}
+
+Usage: $SCRIPT_NAME <command> [subcommand] [options]
+
+Commands:
+    setup [options]     Run setup operations
+    status              Show DINS system status
+    version             Show version information
+    help                Show this help message
+
+Setup Subcommands:
+    dinser setup --init         Initialize DINS system
+    dinser setup cli-ui         Setup CLI user interface
+    dinser setup web-ui         Setup web user interface
+    dinser setup service NAME   Setup a specific service
+
+Options:
+    -h, --help          Show help for a command
+    -v, --verbose       Enable verbose output
+    -d, --debug         Enable debug mode
+    --dry-run           Show what would be done without executing
+
+Environment Variables:
+    DINS_BASE_DIR       Base directory for DINS installation
+    DEBUG               Set to 1 for debug output
+
+Examples:
+    $SCRIPT_NAME setup --init
+    $SCRIPT_NAME setup cli-ui
+    $SCRIPT_NAME status
+    $SCRIPT_NAME help setup
+
+For more information, visit: https://github.com/conceptixx/dins
+
+EOF
+}
+
+show_command_help() {
+    local command="$1"
+    
+    case "$command" in
+        setup)
+            cat << EOF
+DINSER Setup Command
+
+Usage: $SCRIPT_NAME setup [subcommand] [options]
+
+Subcommands:
+    --init              Initialize DINS system (first-time setup)
+    cli-ui              Setup command-line user interface
+    web-ui              Setup web-based user interface
+    service NAME        Setup a specific service
+
+Options:
+    -f, --force         Force re-setup even if already configured
+    --config FILE       Use alternate configuration file
+    -y, --yes           Answer yes to all prompts
+
+Examples:
+    $SCRIPT_NAME setup --init
+    $SCRIPT_NAME setup cli-ui
+    $SCRIPT_NAME setup web-ui
+    $SCRIPT_NAME setup service myservice
+
+EOF
+            ;;
+        status)
+            cat << EOF
+DINSER Status Command
+
+Usage: $SCRIPT_NAME status [options]
+
+Shows the current status of the DINS system including:
+- Base directory and configuration
+- Running services
+- Docker Swarm status
+- System health
+
+Options:
+    --json              Output in JSON format
+    -q, --quiet         Only show errors
+
+EOF
+            ;;
+        *)
+            show_help
+            ;;
+    esac
+}
+
+# =============================================================================
+# COMMAND: version
+# =============================================================================
+
+show_version() {
+    echo "DINSER v${DINSER_VERSION}"
+    echo "DINS Execution Resolver"
+    echo ""
+    echo "Base Directory: ${BASE_DIR}"
+    echo "CLI Directory:  ${CLI_DIR}"
+}
+
+# =============================================================================
+# COMMAND: status
+# =============================================================================
+
+cmd_status() {
+    local json_output=0
+    local quiet=0
+    
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --json)
+                json_output=1
+                shift
+                ;;
+            -q|--quiet)
+                quiet=1
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+    
+    if [[ $json_output -eq 1 ]]; then
+        # JSON output
+        local docker_status="unknown"
+        local swarm_status="unknown"
+        
+        if command -v docker &> /dev/null; then
+            docker_status="installed"
+            if docker info 2>/dev/null | grep -q "Swarm: active"; then
+                swarm_status="active"
+            else
+                swarm_status="inactive"
+            fi
+        else
+            docker_status="not_installed"
+        fi
+        
+        cat << EOF
+{
+  "version": "${DINSER_VERSION}",
+  "base_dir": "${BASE_DIR}",
+  "docker": "${docker_status}",
+  "swarm": "${swarm_status}",
+  "directories": {
+    "cli": "${CLI_DIR}",
+    "config": "${CONFIG_DIR}",
+    "logs": "${LOG_DIR}"
+  }
+}
+EOF
+    else
+        # Human-readable output
+        echo "=============================================="
+        echo "DINS System Status"
+        echo "=============================================="
+        echo ""
+        echo "Version:        ${DINSER_VERSION}"
+        echo "Base Directory: ${BASE_DIR}"
+        echo ""
+        echo "Directories:"
+        echo "  CLI:    ${CLI_DIR}"
+        echo "  Config: ${CONFIG_DIR}"
+        echo "  Logs:   ${LOG_DIR}"
+        echo ""
+        
+        # Check Docker
+        echo "Docker Status:"
+        if command -v docker &> /dev/null; then
+            echo "  Docker: Installed"
+            if docker info &> /dev/null; then
+                echo "  Daemon: Running"
+                if docker info 2>/dev/null | grep -q "Swarm: active"; then
+                    echo "  Swarm:  Active"
+                else
+                    echo "  Swarm:  Inactive"
+                fi
+            else
+                echo "  Daemon: Not running or no permissions"
+            fi
+        else
+            echo "  Docker: Not installed"
+        fi
+        echo ""
+        
+        # Check services
+        echo "DINS Services:"
+        if docker service ls 2>/dev/null | grep -q "dins"; then
+            docker service ls 2>/dev/null | grep "dins" | while read -r line; do
+                echo "  $line"
+            done
+        else
+            echo "  No DINS services found"
+        fi
+        echo ""
+        echo "=============================================="
+    fi
+}
+
+# =============================================================================
+# COMMAND: setup
+# =============================================================================
+
+cmd_setup() {
+    local subcommand=""
+    local force=0
+    local config_file=""
+    local yes_all=0
+    local init_mode=0
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --init)
+                init_mode=1
+                shift
+                ;;
+            cli-ui)
+                subcommand="cli-ui"
+                shift
+                ;;
+            web-ui)
+                subcommand="web-ui"
+                shift
+                ;;
+            service)
+                subcommand="service"
+                shift
+                if [[ $# -gt 0 ]]; then
+                    service_name="$1"
+                    shift
+                fi
+                ;;
+            -f|--force)
+                force=1
+                shift
+                ;;
+            --config)
+                config_file="$2"
+                shift 2
+                ;;
+            -y|--yes)
+                yes_all=1
+                shift
+                ;;
+            -h|--help)
+                show_command_help "setup"
+                return 0
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                show_command_help "setup"
+                return 1
+                ;;
+        esac
+    done
+    
+    # Check if setup.sh exists
+    local setup_script="${CLI_DIR}/setup.sh"
+    if [[ ! -f "$setup_script" ]]; then
+        log_error "Setup script not found: $setup_script"
+        log_error "DINS may not be properly installed."
+        return 1
+    fi
+    
+    # Execute setup based on mode
+    if [[ $init_mode -eq 1 ]]; then
+        log "Running DINS initialization..."
+        bash "$setup_script" --init
+        return $?
+    fi
+    
+    case "$subcommand" in
+        cli-ui)
+            log "Setting up CLI user interface..."
+            bash "$setup_script" --cli-ui
+            ;;
+        web-ui)
+            log "Setting up web user interface..."
+            bash "$setup_script" --web-ui
+            ;;
+        service)
+            if [[ -z "${service_name:-}" ]]; then
+                log_error "Service name required for 'setup service' command"
+                return 1
+            fi
+            log "Setting up service: $service_name"
+            bash "$setup_script" --service "$service_name"
+            ;;
+        "")
+            # No subcommand, show help
+            show_command_help "setup"
+            ;;
+        *)
+            log_error "Unknown setup subcommand: $subcommand"
+            show_command_help "setup"
+            return 1
+            ;;
+    esac
+}
+
+# =============================================================================
+# MAIN ENTRY POINT
+# =============================================================================
+
+main() {
+    # Check for no arguments
+    if [[ $# -eq 0 ]]; then
+        show_help
+        exit 0
+    fi
+    
+    local command="$1"
+    shift
+    
+    case "$command" in
+        setup)
+            cmd_setup "$@"
+            ;;
+        status)
+            cmd_status "$@"
+            ;;
+        version|-v|--version)
+            show_version
+            ;;
+        help|-h|--help)
+            if [[ $# -gt 0 ]]; then
+                show_command_help "$1"
+            else
+                show_help
+            fi
+            ;;
+        *)
+            log_error "Unknown command: $command"
+            show_help
+            exit 1
+            ;;
+    esac
+}
+
+# Run main
+main "$@"
