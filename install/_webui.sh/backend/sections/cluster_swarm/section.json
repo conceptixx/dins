@@ -1,0 +1,13 @@
+{
+  "id": "cluster_swarm",
+  "label": "Cluster & Swarm Setup",
+  "order": 15,
+  "group": "setup",
+  "frontend": {
+    "path": "/sections/cluster_swarm/page.html"
+  },
+  "backend": {
+    "router_module": "sections.cluster_swarm.routes",
+    "router_prefix": "/cluster"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "devices_bluetooth",
+  "label": "Bluetooth Devices",
+  "order": 30,
+  "group": "devices",
+  "frontend": {
+    "path": "/sections/devices_bluetooth/page.html"
+  },
+  "backend": {
+    "router_module": "sections.devices_bluetooth.routes",
+    "router_prefix": "/devices/bluetooth"
+  }
+}

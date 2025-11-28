@@ -1,0 +1,13 @@
+{
+  "id": "stt_engine",
+  "label": "STT Engines",
+  "order": 55,
+  "group": "ai",
+  "frontend": {
+    "path": "/sections/stt_engine/page.html"
+  },
+  "backend": {
+    "router_module": "sections.stt_engine.routes",
+    "router_prefix": "/stt/engine"
+  }
+}

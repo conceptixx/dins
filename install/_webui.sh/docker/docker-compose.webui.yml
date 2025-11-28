@@ -1,0 +1,68 @@
+# =============================================================================
+# DINS WebUI Docker Compose Configuration
+# Location: /dins/install/_webui.sh/docker/docker-compose.webui.yml
+# =============================================================================
+
+version: '3.8'
+
+services:
+  dins-setup:
+    container_name: dins-setup
+    build:
+      context: ../..
+      dockerfile: install/_webui.sh/docker/Dockerfile.webui
+    
+    environment:
+      - DINS_BASE_DIR=/opt/dins
+      - DINS_CONFIG_DIR=/opt/dins/config
+      - DINS_LOG_DIR=/opt/dins/logs
+      - DINS_SECRETS_DIR=/opt/dins/secrets
+      - DINS_WEBUI_DIR=/opt/dins/webui
+    
+    volumes:
+      # Mount host directories for persistence
+      - ${DINS_BASE_DIR:-/opt/dins}/config:/opt/dins/config
+      - ${DINS_BASE_DIR:-/opt/dins}/logs:/opt/dins/logs
+      - ${DINS_BASE_DIR:-/opt/dins}/secrets:/opt/dins/secrets
+      # Optional: mount Docker socket for container management
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    
+    ports:
+      - "80:80"
+    
+    networks:
+      dins-network:
+        aliases:
+          - dins-setup.local
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+networks:
+  dins-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

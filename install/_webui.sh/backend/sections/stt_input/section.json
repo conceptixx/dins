@@ -1,0 +1,13 @@
+{
+  "id": "stt_input",
+  "label": "STT Input & Sync",
+  "order": 50,
+  "group": "ai",
+  "frontend": {
+    "path": "/sections/stt_input/page.html"
+  },
+  "backend": {
+    "router_module": "sections.stt_input.routes",
+    "router_prefix": "/stt/input"
+  }
+}

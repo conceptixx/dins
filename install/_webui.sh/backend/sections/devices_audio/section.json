@@ -1,0 +1,13 @@
+{
+  "id": "devices_audio",
+  "label": "Audio Devices",
+  "order": 35,
+  "group": "devices",
+  "frontend": {
+    "path": "/sections/devices_audio/page.html"
+  },
+  "backend": {
+    "router_module": "sections.devices_audio.routes",
+    "router_prefix": "/devices/audio"
+  }
+}

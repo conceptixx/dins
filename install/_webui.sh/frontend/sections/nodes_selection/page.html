@@ -1,0 +1,32 @@
+<div class="nodes-selection-section">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">DINS Node Selection</h3>
+            <button class="btn btn-sm btn-primary" onclick="saveNodeSelection()">Save Selection</button>
+        </div>
+        <div class="alert alert-info">
+            Select which discovered Raspberry Pis should be used as DINS nodes and assign their roles.
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all" onchange="toggleAllNodes(this.checked)"></th>
+                        <th>Node ID</th>
+                        <th>Hostname</th>
+                        <th>IP Address</th>
+                        <th>SSH Status</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody id="nodes-tbody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            No nodes discovered. Run network discovery first.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

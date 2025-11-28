@@ -1,0 +1,13 @@
+{
+  "id": "devices_video",
+  "label": "Video Devices",
+  "order": 40,
+  "group": "devices",
+  "frontend": {
+    "path": "/sections/devices_video/page.html"
+  },
+  "backend": {
+    "router_module": "sections.devices_video.routes",
+    "router_prefix": "/devices/video"
+  }
+}

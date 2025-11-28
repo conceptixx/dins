@@ -1,0 +1,13 @@
+{
+  "id": "enhancements_stack",
+  "label": "Enhancements",
+  "order": 80,
+  "group": "services",
+  "frontend": {
+    "path": "/sections/enhancements_stack/page.html"
+  },
+  "backend": {
+    "router_module": "sections.enhancements_stack.routes",
+    "router_prefix": "/services/enhancements"
+  }
+}

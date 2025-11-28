@@ -1,0 +1,13 @@
+{
+  "id": "mobile_stack",
+  "label": "Mobile Services",
+  "order": 85,
+  "group": "services",
+  "frontend": {
+    "path": "/sections/mobile_stack/page.html"
+  },
+  "backend": {
+    "router_module": "sections.mobile_stack.routes",
+    "router_prefix": "/services/mobile"
+  }
+}

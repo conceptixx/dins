@@ -1,0 +1,214 @@
+; =============================================================================
+; DINS WebUI Manifest v1.0
+; Location: /dins/install/_webui.sh/Manifest
+; =============================================================================
+; Declarative manifest for WebUI installation and configuration.
+; Uses the same grammar as /install/_setup.sh/Manifest.
+; =============================================================================
+
+; =============================================================================
+; PHASE 1: DIRECTORY STRUCTURE
+; =============================================================================
+[directories:create_base_dirs]
+  ; Ensure base directories exist
+  mkdir:base_dir
+    path="{%DINS_BASE_DIR%}"
+    mode="755"
+    sudo="true"
+  
+  mkdir:config_dir
+    path="{%DINS_CONFIG_DIR%}"
+    mode="750"
+    sudo="true"
+  
+  mkdir:log_dir
+    path="{%DINS_LOG_DIR%}"
+    mode="750"
+    sudo="true"
+  
+  mkdir:secrets_dir
+    path="{%DINS_SECRETS_DIR%}"
+    mode="700"
+    sudo="true"
+  
+  mkdir:webui_dir
+    path="{%DINS_WEBUI_DIR%}"
+    mode="750"
+    sudo="true"
+
+[directories:create_webui_structure]
+  ; WebUI subdirectories
+  mkdir:webui_backend
+    path="{%DINS_WEBUI_DIR%}/backend"
+    mode="750"
+    sudo="true"
+  
+  mkdir:webui_backend_sections
+    path="{%DINS_WEBUI_DIR%}/backend/sections"
+    mode="750"
+    sudo="true"
+  
+  mkdir:webui_frontend
+    path="{%DINS_WEBUI_DIR%}/frontend"
+    mode="750"
+    sudo="true"
+  
+  mkdir:webui_frontend_sections
+    path="{%DINS_WEBUI_DIR%}/frontend/sections"
+    mode="750"
+    sudo="true"
+
+; =============================================================================
+; PHASE 2: ENSURE GROUP AND PERMISSIONS
+; =============================================================================
+[permissions:ensure_dins_group]
+  ; Create dins-system group if it doesn't exist
+  run_cmd:create_dins_group
+    prompt="getent group dins-system > /dev/null 2>&1 || groupadd -r dins-system"
+    sudo="true"
+    allow_fail="true"
+
+[permissions:set_base_ownership]
+  ; Set ownership for base directories
+  chuser:base_dir_user
+    path="{%DINS_BASE_DIR%}"
+    user="root"
+    recursive="true"
+    sudo="true"
+  
+  chgroup:base_dir_group
+    path="{%DINS_BASE_DIR%}"
+    group="dins-system"
+    recursive="true"
+    sudo="true"
+
+[permissions:set_dir_permissions]
+  ; Set directory permissions
+  chmod:webui_dirs
+    path="{%DINS_WEBUI_DIR%}"
+    mode="750"
+    recursive="true"
+    sudo="true"
+  
+  chmod:config_dir_perm
+    path="{%DINS_CONFIG_DIR%}"
+    mode="750"
+    recursive="false"
+    sudo="true"
+  
+  chmod:secrets_dir_perm
+    path="{%DINS_SECRETS_DIR%}"
+    mode="700"
+    recursive="false"
+    sudo="true"
+
+; =============================================================================
+; PHASE 3: DEPLOY WEBUI ASSETS
+; =============================================================================
+[deploy:backend]
+  ; Copy backend files to runtime location
+  copy:backend_app
+    source="{%SCRIPT_DIR%}/_webui.sh/backend/"
+    destination="{%DINS_WEBUI_DIR%}/backend/"
+    recursive="true"
+    sudo="true"
+  
+  chmod:backend_files
+    path="{%DINS_WEBUI_DIR%}/backend"
+    mode="640"
+    recursive="true"
+    sudo="true"
+  
+  chmod:backend_dirs
+    path="{%DINS_WEBUI_DIR%}/backend"
+    mode="750"
+    recursive="false"
+    type="directory"
+    sudo="true"
+
+[deploy:frontend]
+  ; Copy frontend files to runtime location
+  copy:frontend_files
+    source="{%SCRIPT_DIR%}/_webui.sh/frontend/"
+    destination="{%DINS_WEBUI_DIR%}/frontend/"
+    recursive="true"
+    sudo="true"
+  
+  chmod:frontend_files
+    path="{%DINS_WEBUI_DIR%}/frontend"
+    mode="640"
+    recursive="true"
+    sudo="true"
+  
+  chmod:frontend_dirs
+    path="{%DINS_WEBUI_DIR%}/frontend"
+    mode="750"
+    recursive="false"
+    type="directory"
+    sudo="true"
+
+; =============================================================================
+; PHASE 4: DEFAULT CONFIGURATION
+; =============================================================================
+[config:create_default]
+  ; Create default dins_config.json if it doesn't exist
+  template:default_config
+    source="{%SCRIPT_DIR%}/_webui.sh/templates/dins_config.json.template"
+    destination="{%DINS_CONFIG_DIR%}/dins_config.json"
+    overwrite="false"
+    sudo="true"
+  
+  chmod:config_file_perm
+    path="{%DINS_CONFIG_DIR%}/dins_config.json"
+    mode="640"
+    sudo="true"
+  
+  chuser:config_file_user
+    path="{%DINS_CONFIG_DIR%}/dins_config.json"
+    user="root"
+    sudo="true"
+  
+  chgroup:config_file_group
+    path="{%DINS_CONFIG_DIR%}/dins_config.json"
+    group="dins-system"
+    sudo="true"
+
+[config:create_secrets_placeholder]
+  ; Create placeholder secret files with secure permissions
+  run_cmd:create_admin_pw_placeholder
+    prompt="touch {%DINS_SECRETS_DIR%}/admin_password && chmod 600 {%DINS_SECRETS_DIR%}/admin_password"
+    sudo="true"
+    allow_fail="true"
+  
+  run_cmd:create_ssh_pw_placeholder
+    prompt="touch {%DINS_SECRETS_DIR%}/ssh_pi_password && chmod 600 {%DINS_SECRETS_DIR%}/ssh_pi_password"
+    sudo="true"
+    allow_fail="true"
+
+; =============================================================================
+; PHASE 5: FINAL VALIDATION
+; =============================================================================
+[validation:verify_structure]
+  echo:validation_start
+    message="Validating WebUI installation..."
+    level="INFO"
+  
+  run_cmd:verify_backend
+    prompt="test -d {%DINS_WEBUI_DIR%}/backend/sections && echo 'Backend sections: OK'"
+    sudo="false"
+  
+  run_cmd:verify_frontend
+    prompt="test -d {%DINS_WEBUI_DIR%}/frontend/sections && echo 'Frontend sections: OK'"
+    sudo="false"
+  
+  run_cmd:verify_config
+    prompt="test -f {%DINS_CONFIG_DIR%}/dins_config.json && echo 'Config file: OK'"
+    sudo="false"
+  
+  echo:validation_complete
+    message="WebUI manifest execution complete!"
+    level="INFO"
+
+; =============================================================================
+; END OF MANIFEST
+; =============================================================================

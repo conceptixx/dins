@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DINS Setup</title>
+    <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">🌐</span>
+                <span class="logo-text">DINS Setup</span>
+            </div>
+            <div class="header-status">
+                <span id="connection-status" class="status-indicator status-checking">
+                    Connecting...
+                </span>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <nav class="sidebar" id="sidebar">
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Loading...</h3>
+                </div>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="content" id="content">
+                <div class="welcome-screen">
+                    <h1>Welcome to DINS Setup</h1>
+                    <p>Distributed Intelligent Network Services</p>
+                    <div class="loading-indicator">
+                        <div class="spinner"></div>
+                        <p>Loading configuration sections...</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>DINS v1.0 | <a href="#" onclick="showAbout()">About</a></p>
+        </footer>
+    </div>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideAbout()">&times;</span>
+            <h2>About DINS</h2>
+            <p><strong>Distributed Intelligent Network Services</strong></p>
+            <p>Version 1.0.0</p>
+            <hr>
+            <p>DINS is a modular platform for distributed AI-powered services including:</p>
+            <ul>
+                <li>Speech-to-Text (STT) with multi-microphone sync</li>
+                <li>Text-to-Speech (TTS) with multi-output routing</li>
+                <li>Local and Cloud LLM integration</li>
+                <li>Docker Swarm cluster management</li>
+                <li>Device discovery and management</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="/common.js"></script>
+    <script>
+        // Global state
+        let sections = [];
+        let currentSection = null;
+        let config = {};
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkHealth();
+            await loadSections();
+            await loadConfig();
+        });
+
+        // Check API health
+        async function checkHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    updateConnectionStatus('connected', 'Connected');
+                } else {
+                    updateConnectionStatus('error', 'API Error');
+                }
+            } catch (error) {
+                updateConnectionStatus('error', 'Disconnected');
+                console.error('Health check failed:', error);
+            }
+        }
+
+        // Update connection status indicator
+        function updateConnectionStatus(status, text) {
+            const indicator = document.getElementById('connection-status');
+            indicator.className = `status-indicator status-${status}`;
+            indicator.textContent = text;
+        }
+
+        // Load configuration sections from API
+        async function loadSections() {
+            try {
+                const response = await fetch('/api/ui/sections');
+                sections = await response.json();
+                renderNavigation();
+                
+                // Auto-select first section if available
+                if (sections.length > 0) {
+                    loadSection(sections[0].id);
+                }
+            } catch (error) {
+                console.error('Failed to load sections:', error);
+                showError('Failed to load configuration sections');
+            }
+        }
+
+        // Load main configuration
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                config = await response.json();
+            } catch (error) {
+                console.error('Failed to load config:', error);
+            }
+        }
+
+        // Render navigation sidebar
+        function renderNavigation() {
+            const sidebar = document.getElementById('sidebar');
+            
+            // Group sections by their group property
+            const groups = {};
+            sections.forEach(section => {
+                const group = section.group || 'other';
+                if (!groups[group]) {
+                    groups[group] = [];
+                }
+                groups[group].push(section);
+            });
+
+            // Define group labels
+            const groupLabels = {
+                'setup': 'Initial Setup',
+                'devices': 'Devices',
+                'ai': 'AI Services',
+                'services': 'Service Stacks',
+                'other': 'Other'
+            };
+
+            // Build navigation HTML
+            let navHTML = '';
+            for (const [groupId, groupSections] of Object.entries(groups)) {
+                navHTML += `
+                    <div class="nav-section">
+                        <h3 class="nav-section-title">${groupLabels[groupId] || groupId}</h3>
+                        <ul class="nav-list">
+                            ${groupSections.map(section => `
+                                <li class="nav-item" data-section="${section.id}">
+                                    <a href="#" onclick="loadSection('${section.id}'); return false;">
+                                        ${section.label}
+                                    </a>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            sidebar.innerHTML = navHTML;
+        }
+
+        // Load a section's content
+        async function loadSection(sectionId) {
+            const section = sections.find(s => s.id === sectionId);
+            if (!section) {
+                showError(`Section not found: ${sectionId}`);
+                return;
+            }
+
+            // Update navigation active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.section === sectionId) {
+                    item.classList.add('active');
+                }
+            });
+
+            currentSection = section;
+            const content = document.getElementById('content');
+            
+            // Show loading state
+            content.innerHTML = `
+                <div class="section-loading">
+                    <div class="spinner"></div>
+                    <p>Loading ${section.label}...</p>
+                </div>
+            `;
+
+            try {
+                // Fetch section HTML
+                const htmlResponse = await fetch(section.frontend_path);
+                if (!htmlResponse.ok) {
+                    throw new Error(`Failed to load section HTML: ${htmlResponse.status}`);
+                }
+                const html = await htmlResponse.text();
+                
+                // Insert HTML
+                content.innerHTML = `
+                    <div class="section-header">
+                        <h1>${section.label}</h1>
+                    </div>
+                    <div class="section-content" id="section-${sectionId}">
+                        ${html}
+                    </div>
+                `;
+
+                // Load section JavaScript
+                const jsPath = section.frontend_path.replace('page.html', 'page.js');
+                await loadScript(jsPath);
+                
+                // Initialize section if it has an init function
+                const initFn = window[`init_${sectionId.replace(/-/g, '_')}`];
+                if (typeof initFn === 'function') {
+                    await initFn();
+                }
+
+            } catch (error) {
+                console.error(`Failed to load section ${sectionId}:`, error);
+                content.innerHTML = `
+                    <div class="section-error">
+                        <h2>Error Loading Section</h2>
+                        <p>${error.message}</p>
+                        <button onclick="loadSection('${sectionId}')" class="btn btn-primary">
+                            Retry
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Dynamic script loader
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                // Remove existing script if any
+                const existing = document.querySelector(`script[data-section-src="${src}"]`);
+                if (existing) {
+                    existing.remove();
+                }
+
+                const script = document.createElement('script');
+                script.src = src;
+                script.dataset.sectionSrc = src;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+                document.body.appendChild(script);
+            });
+        }
+
+        // Show error message
+        function showError(message) {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div class="error-message">
+                    <h2>Error</h2>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // Modal functions
+        function showAbout() {
+            document.getElementById('about-modal').style.display = 'flex';
+        }
+
+        function hideAbout() {
+            document.getElementById('about-modal').style.display = 'none';
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('about-modal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

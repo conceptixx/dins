@@ -1,0 +1,147 @@
+<div class="cluster-swarm-section">
+    <!-- Local Host Info -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">This Machine</h3>
+            <span id="local-role" class="badge badge-info">Checking...</span>
+        </div>
+        <div id="local-info">
+            <div class="info-row">
+                <span class="info-label">Current Hostname:</span>
+                <span id="current-hostname">Loading...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Planned Hostname:</span>
+                <span id="planned-hostname" class="text-primary">dins-main</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">IP Addresses:</span>
+                <span id="ip-addresses">Loading...</span>
+            </div>
+        </div>
+        <div class="btn-group" style="margin-top: 1rem;">
+            <button id="rename-btn" class="btn btn-primary" onclick="renameLocalHost()">
+                Rename to dins-main
+            </button>
+        </div>
+        <div id="rename-warning" class="alert alert-warning" style="display: none; margin-top: 1rem;">
+            <strong>Reboot Required:</strong> The hostname has been changed. A reboot is required for the change to take full effect.
+        </div>
+    </div>
+
+    <!-- Swarm Status -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Docker Swarm Status</h3>
+            <span id="swarm-status" class="badge badge-warning">Not Initialized</span>
+        </div>
+        <div id="swarm-info">
+            <p>Docker Swarm is used to orchestrate DINS services across all nodes.</p>
+        </div>
+        <div class="btn-group" style="margin-top: 1rem;">
+            <button id="init-swarm-btn" class="btn btn-primary" onclick="initSwarm()">
+                Initialize Docker Swarm
+            </button>
+            <button id="refresh-status-btn" class="btn btn-outline" onclick="refreshSwarmStatus()">
+                Refresh Status
+            </button>
+        </div>
+    </div>
+
+    <!-- Discovered Nodes -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Discovered Nodes</h3>
+            <button class="btn btn-sm btn-outline" onclick="planNodeHostnames()">
+                Plan Hostnames
+            </button>
+        </div>
+        <div class="alert alert-info">
+            <strong>Note:</strong> Run network and SSH scans in the "Network & SSH Discovery" section first to discover Raspberry Pi nodes.
+        </div>
+        <div class="table-container">
+            <table id="nodes-table">
+                <thead>
+                    <tr>
+                        <th>Current Hostname</th>
+                        <th>IP Address</th>
+                        <th>New Hostname</th>
+                        <th>SSH Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="nodes-tbody">
+                    <tr>
+                        <td colspan="5" class="text-center">No nodes discovered yet</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Node Installation -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Install DINS on Nodes</h3>
+        </div>
+        <p>This will remotely install the base DINS system on all selected nodes via SSH.</p>
+        <div class="btn-group" style="margin-top: 1rem;">
+            <button id="install-nodes-btn" class="btn btn-primary" onclick="installNodes()" disabled>
+                Install DINS on Selected Nodes
+            </button>
+        </div>
+        <div id="install-progress" style="display: none; margin-top: 1rem;">
+            <h4>Installation Progress</h4>
+            <div id="progress-list"></div>
+        </div>
+    </div>
+
+    <!-- Cluster Nodes After Setup -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Cluster Nodes</h3>
+        </div>
+        <div class="table-container">
+            <table id="cluster-table">
+                <thead>
+                    <tr>
+                        <th>Node ID</th>
+                        <th>Hostname</th>
+                        <th>Docker Role</th>
+                        <th>DINS Role</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="cluster-tbody">
+                    <tr>
+                        <td colspan="5" class="text-center">Swarm not initialized</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.info-row:last-child {
+    border-bottom: none;
+}
+.info-label {
+    font-weight: 500;
+}
+.text-primary {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+.text-center {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem !important;
+}
+</style>

@@ -1,0 +1,13 @@
+{
+  "id": "network_ssh",
+  "label": "Network & SSH Discovery",
+  "order": 20,
+  "group": "setup",
+  "frontend": {
+    "path": "/sections/network_ssh/page.html"
+  },
+  "backend": {
+    "router_module": "sections.network_ssh.routes",
+    "router_prefix": "/network"
+  }
+}

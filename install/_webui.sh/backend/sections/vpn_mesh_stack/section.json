@@ -1,0 +1,13 @@
+{
+  "id": "vpn_mesh_stack",
+  "label": "VPN & Mesh Network",
+  "order": 90,
+  "group": "services",
+  "frontend": {
+    "path": "/sections/vpn_mesh_stack/page.html"
+  },
+  "backend": {
+    "router_module": "sections.vpn_mesh_stack.routes",
+    "router_prefix": "/services/vpn"
+  }
+}

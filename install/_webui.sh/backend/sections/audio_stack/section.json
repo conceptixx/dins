@@ -1,0 +1,13 @@
+{
+  "id": "audio_stack",
+  "label": "Audio Services",
+  "order": 75,
+  "group": "services",
+  "frontend": {
+    "path": "/sections/audio_stack/page.html"
+  },
+  "backend": {
+    "router_module": "sections.audio_stack.routes",
+    "router_prefix": "/services/audio"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "llm_local",
+  "label": "LLM Local Providers",
+  "order": 70,
+  "group": "ai",
+  "frontend": {
+    "path": "/sections/llm_local/page.html"
+  },
+  "backend": {
+    "router_module": "sections.llm_local.routes",
+    "router_prefix": "/llm/local"
+  }
+}

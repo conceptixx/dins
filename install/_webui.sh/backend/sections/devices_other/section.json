@@ -1,0 +1,13 @@
+{
+  "id": "devices_other",
+  "label": "Other Devices",
+  "order": 45,
+  "group": "devices",
+  "frontend": {
+    "path": "/sections/devices_other/page.html"
+  },
+  "backend": {
+    "router_module": "sections.devices_other.routes",
+    "router_prefix": "/devices/other"
+  }
+}

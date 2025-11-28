@@ -1,0 +1,13 @@
+{
+  "id": "llm_cloud",
+  "label": "LLM Cloud Providers",
+  "order": 65,
+  "group": "ai",
+  "frontend": {
+    "path": "/sections/llm_cloud/page.html"
+  },
+  "backend": {
+    "router_module": "sections.llm_cloud.routes",
+    "router_prefix": "/llm/cloud"
+  }
+}

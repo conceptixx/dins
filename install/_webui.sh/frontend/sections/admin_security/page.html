@@ -1,0 +1,136 @@
+<div class="admin-security-section">
+    <!-- Status Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Setup Status</h3>
+            <span id="setup-status" class="badge badge-warning">Incomplete</span>
+        </div>
+        <div id="status-details">
+            <div class="status-item">
+                <span>Username</span>
+                <span id="status-username" class="badge badge-warning">Not Set</span>
+            </div>
+            <div class="status-item">
+                <span>Email Verified</span>
+                <span id="status-email" class="badge badge-warning">Not Verified</span>
+            </div>
+            <div class="status-item">
+                <span>Password</span>
+                <span id="status-password" class="badge badge-warning">Not Set</span>
+            </div>
+            <div class="status-item">
+                <span>2FA Enabled</span>
+                <span id="status-2fa" class="badge badge-warning">Not Configured</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Username -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Admin Username</h3>
+        </div>
+        <form id="username-form">
+            <div class="form-group">
+                <label class="form-label" for="admin-username">Master Admin Username</label>
+                <input type="text" id="admin-username" name="username" class="form-input" 
+                       placeholder="Enter admin username" minlength="3" required>
+                <p class="form-hint">Minimum 3 characters. This will be the primary admin account.</p>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Username</button>
+        </form>
+    </div>
+
+    <!-- Email Verification -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Email Verification</h3>
+        </div>
+        <form id="email-form">
+            <div class="form-group">
+                <label class="form-label" for="admin-email">Admin Email Address</label>
+                <input type="email" id="admin-email" name="email" class="form-input" 
+                       placeholder="admin@example.com" required>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary" id="send-code-btn">Send Verification Code</button>
+            </div>
+        </form>
+        
+        <hr style="margin: 1.5rem 0;">
+        
+        <form id="verify-form" style="display: none;">
+            <div class="form-group">
+                <label class="form-label" for="verification-code">Verification Code</label>
+                <input type="text" id="verification-code" name="code" class="form-input" 
+                       placeholder="Enter 6-digit code" pattern="[0-9]{6}" required>
+                <p class="form-hint">Check your email for the verification code.</p>
+            </div>
+            <button type="submit" class="btn btn-success">Verify Email</button>
+        </form>
+    </div>
+
+    <!-- Password Setup -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Password Setup</h3>
+        </div>
+        <form id="password-form">
+            <div class="form-group">
+                <label class="form-label" for="admin-password">Password</label>
+                <input type="password" id="admin-password" name="password" class="form-input" 
+                       placeholder="Enter password" minlength="8" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="admin-password-confirm">Confirm Password</label>
+                <input type="password" id="admin-password-confirm" name="password_confirm" class="form-input" 
+                       placeholder="Confirm password" required>
+            </div>
+            <div id="password-strength" class="form-hint"></div>
+            <button type="submit" class="btn btn-primary">Set Password</button>
+        </form>
+    </div>
+
+    <!-- Two-Factor Authentication -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Two-Factor Authentication</h3>
+        </div>
+        <div class="alert alert-info">
+            <strong>Required:</strong> Two-factor authentication is required for admin accounts.
+        </div>
+        <form id="twofa-form">
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="twofa-required" name="required" checked disabled>
+                    <label for="twofa-required">Require 2FA for admin login (always enabled)</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Authentication Methods</label>
+                <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                    <input type="checkbox" id="twofa-email" name="email_otp_enabled" checked>
+                    <label for="twofa-email">Email OTP (enabled by default)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="twofa-totp" name="totp_enabled" disabled>
+                    <label for="twofa-totp">TOTP Authenticator App (coming soon)</label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save 2FA Settings</button>
+        </form>
+    </div>
+</div>
+
+<style>
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.status-item:last-child {
+    border-bottom: none;
+}
+</style>

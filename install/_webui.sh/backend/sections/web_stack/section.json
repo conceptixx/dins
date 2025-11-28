@@ -1,0 +1,13 @@
+{
+  "id": "web_stack",
+  "label": "Web Services",
+  "order": 95,
+  "group": "services",
+  "frontend": {
+    "path": "/sections/web_stack/page.html"
+  },
+  "backend": {
+    "router_module": "sections.web_stack.routes",
+    "router_prefix": "/services/web"
+  }
+}

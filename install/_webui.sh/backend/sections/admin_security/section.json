@@ -1,0 +1,13 @@
+{
+  "id": "admin_security",
+  "label": "Admin & Security",
+  "order": 10,
+  "group": "setup",
+  "frontend": {
+    "path": "/sections/admin_security/page.html"
+  },
+  "backend": {
+    "router_module": "sections.admin_security.routes",
+    "router_prefix": "/admin"
+  }
+}

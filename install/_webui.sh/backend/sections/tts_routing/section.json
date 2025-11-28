@@ -1,0 +1,13 @@
+{
+  "id": "tts_routing",
+  "label": "TTS & Audio Output",
+  "order": 60,
+  "group": "ai",
+  "frontend": {
+    "path": "/sections/tts_routing/page.html"
+  },
+  "backend": {
+    "router_module": "sections.tts_routing.routes",
+    "router_prefix": "/tts"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "nodes_selection",
+  "label": "Node Selection",
+  "order": 25,
+  "group": "setup",
+  "frontend": {
+    "path": "/sections/nodes_selection/page.html"
+  },
+  "backend": {
+    "router_module": "sections.nodes_selection.routes",
+    "router_prefix": "/nodes"
+  }
+}

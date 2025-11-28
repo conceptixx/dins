@@ -1,0 +1,109 @@
+<div class="network-ssh-section">
+    <!-- Permissions -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Scan Permissions</h3>
+        </div>
+        <div class="alert alert-warning">
+            <strong>Security Notice:</strong> Enable these permissions only when you trust the network and want DINS to discover devices automatically.
+        </div>
+        <form id="permissions-form">
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="allow-network-scan" name="allow_network_scan">
+                    <label for="allow-network-scan">Allow system to scan the network for devices</label>
+                </div>
+                <p class="form-hint">Enables ARP scanning and network host discovery.</p>
+            </div>
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="allow-ssh-scan" name="allow_ssh_scan">
+                    <label for="allow-ssh-scan">Allow system to SSH into devices with 'pi' user</label>
+                </div>
+                <p class="form-hint">Enables SSH-based discovery of Raspberry Pi devices.</p>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Permissions</button>
+        </form>
+    </div>
+
+    <!-- SSH Password -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Raspberry Pi SSH Password</h3>
+        </div>
+        <p>Set the default SSH password for the 'pi' user on your Raspberry Pi devices.</p>
+        <form id="ssh-password-form">
+            <div class="form-group">
+                <label class="form-label" for="pi-password">Pi User Password</label>
+                <input type="password" id="pi-password" name="password" class="form-input" 
+                       placeholder="Enter SSH password for 'pi' user">
+                <p class="form-hint">This password is stored securely and never saved in the config file.</p>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Password</button>
+        </form>
+    </div>
+
+    <!-- Scan Ranges -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Scan Ranges</h3>
+        </div>
+        <form id="scan-ranges-form">
+            <div class="form-group">
+                <label class="form-label" for="scan-ranges">Network Ranges (CIDR notation)</label>
+                <textarea id="scan-ranges" name="scan_ranges" class="form-textarea" rows="3" 
+                          placeholder="192.168.0.0/24&#10;192.168.1.0/24"></textarea>
+                <p class="form-hint">One range per line. Example: 192.168.0.0/24</p>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Ranges</button>
+        </form>
+    </div>
+
+    <!-- Discovery Actions -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Run Discovery</h3>
+        </div>
+        <div class="btn-group">
+            <button id="network-scan-btn" class="btn btn-primary" onclick="runNetworkScan()" disabled>
+                Run Network Scan
+            </button>
+            <button id="ssh-scan-btn" class="btn btn-secondary" onclick="runSSHScan()" disabled>
+                Run SSH Scan for Raspberry Pis
+            </button>
+        </div>
+        
+        <div id="scan-results" style="margin-top: 1.5rem; display: none;">
+            <h4>Scan Results</h4>
+            <div id="results-content"></div>
+        </div>
+    </div>
+
+    <!-- Discovered Nodes -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Discovered Nodes</h3>
+            <button class="btn btn-sm btn-outline" onclick="refreshNodes()">Refresh</button>
+        </div>
+        <div class="table-container">
+            <table id="nodes-table">
+                <thead>
+                    <tr>
+                        <th>Node ID</th>
+                        <th>Hostname</th>
+                        <th>IP Address</th>
+                        <th>SSH Reachable</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody id="nodes-tbody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                            No nodes discovered yet. Run a scan to find devices.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
