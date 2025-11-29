@@ -1,0 +1,11 @@
+{
+    "id": "services",
+    "title": "Swarm Services",
+    "description": "Manage DINS Docker Swarm services - build, deploy, and monitor",
+    "icon": "server",
+    "order": 50,
+    "enabled": true,
+    "category": "infrastructure",
+    "requires_auth": true,
+    "api_prefix": "/api/services"
+}

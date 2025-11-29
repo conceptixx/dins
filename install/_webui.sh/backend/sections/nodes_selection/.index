@@ -1,0 +1,147 @@
+### META
+directory_path: install/_webui.sh/backend/sections/nodes_selection
+last_updated: 2025-11-28T17:00:00Z
+description: Node Selection section for the DINS WebUI. Handles selection of discovered DINS nodes and assignment of roles (worker/lead).
+notes: Order 25 - in setup group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the nodes_selection section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "setup", order 25, router prefix "/nodes".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for listing, selecting, and assigning roles to discovered nodes.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages discovery.nodes section of the configuration.
+
+functions:
+  - name: get_nodes
+    kind: function
+    purpose: Returns all discovered nodes.
+    usage_examples:
+      - GET /api/nodes/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of node objects from discovery.nodes.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_nodes
+    kind: function
+    purpose: Updates selection and roles for multiple nodes at once.
+    usage_examples:
+      - PUT /api/nodes/ {"nodes": [{"node_id": "node01", "selected": true, "role": "worker"}]}
+    parameters:
+      - name: nodes
+        type: list
+        required: true
+        default: none
+        description: List of NodeUpdate objects with node_id, selected, role.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status and updated nodes list.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: select_node
+    kind: function
+    purpose: Selects or deselects a single node.
+    usage_examples:
+      - POST /api/nodes/{node_id}/select?selected=true
+    parameters:
+      - name: node_id
+        type: string
+        required: true
+        default: none
+        description: ID of the node.
+        allowed_values:
+          - none
+      - name: selected
+        type: bool
+        required: false
+        default: "true"
+        description: Whether to select the node.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status, node_id, and selected state.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Node not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: set_node_role
+    kind: function
+    purpose: Sets the role for a node (worker or lead).
+    usage_examples:
+      - POST /api/nodes/{node_id}/role?role=worker
+    parameters:
+      - name: node_id
+        type: string
+        required: true
+        default: none
+        description: ID of the node.
+        allowed_values:
+          - none
+      - name: role
+        type: enum
+        required: true
+        default: none
+        description: Role to assign.
+        allowed_values:
+          - "worker"
+          - "lead"
+    returns:
+      type: dict
+      description: Status, node_id, and role.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Invalid role
+        behavior: Returns HTTP 400
+      - condition: Node not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+---

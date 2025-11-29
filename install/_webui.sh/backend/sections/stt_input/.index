@@ -1,0 +1,201 @@
+### META
+directory_path: install/_webui.sh/backend/sections/stt_input
+last_updated: 2025-11-28T17:00:00Z
+description: STT Input & Sync section for the DINS WebUI. Handles logical microphone array configuration, multi-source synchronization, and audio buffering settings.
+notes: Order 50 - in AI group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the stt_input section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "ai", order 50, router prefix "/stt/input".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for logical microphone input configuration, source management, and synchronization settings.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages stt.logical_inputs in configuration. Supports multi-microphone arrays with drift correction.
+
+functions:
+  - name: get_logical_inputs
+    kind: function
+    purpose: Returns all logical STT inputs (microphone array configurations).
+    usage_examples:
+      - GET /api/stt/input/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of LogicalInput objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: create_logical_input
+    kind: function
+    purpose: Creates a new logical input (microphone array).
+    usage_examples:
+      - POST /api/stt/input/ {"id": "main_array", "label": "Main Room Array", ...}
+    parameters:
+      - name: input_config
+        type: object
+        required: true
+        default: none
+        description: LogicalInput object with id, label, sources, sync, buffering.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status and created input.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_logical_input
+    kind: function
+    purpose: Updates a logical input configuration.
+    usage_examples:
+      - PUT /api/stt/input/{input_id}
+    parameters:
+      - name: input_id
+        type: string
+        required: true
+        default: none
+        description: ID of the logical input.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update (label, sources, sync, buffering).
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Logical input not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: delete_logical_input
+    kind: function
+    purpose: Deletes a logical input.
+    usage_examples:
+      - DELETE /api/stt/input/{input_id}
+    parameters:
+      - name: input_id
+        type: string
+        required: true
+        default: none
+        description: ID of the logical input to delete.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Logical input not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: add_source
+    kind: function
+    purpose: Adds an audio source to a logical input.
+    usage_examples:
+      - POST /api/stt/input/{input_id}/sources {"device_ref": "hw:0,0", "node_id": "dins-main"}
+    parameters:
+      - name: input_id
+        type: string
+        required: true
+        default: none
+        description: ID of the logical input.
+        allowed_values:
+          - none
+      - name: source
+        type: object
+        required: true
+        default: none
+        description: AudioSource object with device_ref, node_id, channel, offset_ms.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Logical input not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: update_sync
+    kind: function
+    purpose: Updates synchronization configuration for a logical input.
+    usage_examples:
+      - PUT /api/stt/input/{input_id}/sync {"mode": "auto", "max_skew_ms": 20}
+    parameters:
+      - name: input_id
+        type: string
+        required: true
+        default: none
+        description: ID of the logical input.
+        allowed_values:
+          - none
+      - name: sync
+        type: object
+        required: true
+        default: none
+        description: SyncConfig object with mode, max_skew_ms, drift_correction_ms.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Logical input not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+---

@@ -1,0 +1,23 @@
+### META
+directory_path: testsuite/module_service
+description: Tests for DINS Swarm Service Construction per PART 9
+created: 2025-11-29
+modified: 2025-11-29
+status: active
+
+### FILES
+test_module_service.py | Main test module with ServiceTests class
+README.md | Module documentation
+
+### TEST_CATEGORIES
+directory_structure | Tests for services/, config/, swarm/, secrets/ directories
+example_service | Tests for _example service template
+cli_commands | Tests for dinser service command
+security | Tests for no secrets in descriptors
+
+### ENTRY_POINT
+run_tests(config) | Called by testsuite.py, returns ModuleResult
+
+### DEPENDENCIES
+yaml | For parsing service.yaml files
+pathlib | For path operations

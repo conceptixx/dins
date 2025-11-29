@@ -1,0 +1,25 @@
+### META
+directory_path: install/_webui.sh/backend/sections/services
+description: Web-UI backend for Swarm Services management per PART 9
+created: 2025-11-29
+modified: 2025-11-29
+status: active
+
+### FILES
+section.json | Section metadata (id, title, order, etc.)
+routes.py | Flask blueprint with API routes
+
+### API_ENDPOINTS
+GET /api/services/list | List all defined services
+GET /api/services/<n> | Get service details and descriptor
+POST /api/services/<n>/build | Build service image
+POST /api/services/<n>/deploy | Deploy service to swarm
+POST /api/services/<n>/remove | Remove service from swarm
+GET /api/services/<n>/logs | Get service logs
+GET /api/services/<n>/status | Get deployment status
+GET /api/services/<n>/check | Run service diagnostics
+
+### DEPENDENCIES
+Flask | Web framework
+PyYAML | For parsing service.yaml files
+dinser CLI | For build/deploy operations

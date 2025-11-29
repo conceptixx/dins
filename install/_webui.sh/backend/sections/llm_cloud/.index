@@ -1,0 +1,199 @@
+### META
+directory_path: install/_webui.sh/backend/sections/llm_cloud
+last_updated: 2025-11-28T16:45:00Z
+description: LLM Cloud Providers section for the DINS WebUI. Handles cloud LLM provider configuration including OpenAI, Anthropic, Google Gemini, and other cloud providers.
+notes: Order 65 - in AI group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the llm_cloud section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "ai", order 65, router prefix "/llm/cloud".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for cloud LLM provider configuration, API key storage, and mode selection.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+  - secrets directory (API key files)
+status: active
+notes: Manages llm.cloud_providers and llm.mode in configuration.
+
+functions:
+  - name: get_providers
+    kind: function
+    purpose: Returns all cloud LLM providers from the catalog.
+    usage_examples:
+      - GET /api/llm/cloud/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of cloud provider objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_selected
+    kind: function
+    purpose: Returns current LLM mode and selected cloud provider.
+    usage_examples:
+      - GET /api/llm/cloud/selected
+    parameters:
+      - none
+    returns:
+      type: dict
+      description: Object with mode, selected_cloud_provider_id, cloud_enabled.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: set_mode
+    kind: function
+    purpose: Sets LLM mode (local_first, cloud_only, local_only) and optionally selects cloud provider.
+    usage_examples:
+      - POST /api/llm/cloud/mode {"mode": "local_first", "selected_cloud_provider_id": "openai"}
+    parameters:
+      - name: mode
+        type: enum
+        required: true
+        default: none
+        description: LLM operation mode.
+        allowed_values:
+          - "local_first"
+          - "cloud_only"
+          - "local_only"
+      - name: selected_cloud_provider_id
+        type: string
+        required: false
+        default: none
+        description: ID of cloud provider to select.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Invalid mode
+        behavior: Returns HTTP 400
+    messages:
+      - type: log
+        content: none
+
+  - name: update_provider
+    kind: function
+    purpose: Updates a cloud provider configuration.
+    usage_examples:
+      - PUT /api/llm/cloud/{provider_id}
+    parameters:
+      - name: provider_id
+        type: string
+        required: true
+        default: none
+        description: ID of the provider to update.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update (enabled, api_key_env_var, config).
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Provider not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: set_api_key
+    kind: function
+    purpose: Stores API key for a cloud provider in a secret file with restricted permissions.
+    usage_examples:
+      - POST /api/llm/cloud/{provider_id}/api-key {"api_key": "sk-..."}
+    parameters:
+      - name: provider_id
+        type: string
+        required: true
+        default: none
+        description: ID of the provider.
+        allowed_values:
+          - none
+      - name: api_key
+        type: string
+        required: true
+        default: none
+        description: API key to store.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Creates secret file with mode 0600
+      - Updates config with secret file path
+    errors:
+      - condition: Permission denied
+        behavior: Raises exception
+    messages:
+      - type: log
+        content: none
+
+  - name: select_provider
+    kind: function
+    purpose: Selects a cloud provider as the default.
+    usage_examples:
+      - POST /api/llm/cloud/{provider_id}/select
+    parameters:
+      - name: provider_id
+        type: string
+        required: true
+        default: none
+        description: ID of the provider to select.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status and selected provider_id.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---

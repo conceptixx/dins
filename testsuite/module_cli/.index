@@ -1,0 +1,30 @@
+### META
+directory_path: testsuite/module_cli
+description: CLI testing module for DINS command-line tools per PART5
+created: 2025-01-28
+modified: 2025-01-28
+status: active
+
+### FILES
+test_module_cli.py | Main CLI test module with run_tests() function
+README.md | Module documentation and usage instructions
+
+### TESTS
+test_dinser_exists | Verifies dinser CLI exists and is executable
+test_dinser_help | Validates help command output
+test_dinser_version | Validates version command output
+test_dinser_status | Tests status command execution
+test_dinser_no_args | Tests behavior with no arguments
+test_dinser_invalid_command | Tests graceful error handling
+test_dinser_webui_help | Tests webui subcommand
+test_cli_scripts_executable | Verifies script permissions
+test_setup_sh_help | Tests setup.sh help
+test_webui_sh_help | Tests webui.sh help
+
+### DEPENDENCIES
+testsuite.py | Main test suite framework
+subprocess | Python subprocess module for CLI execution
+
+### NOTES
+All tests are non-destructive per PART5 specification.
+Tests validate CLI behavior without executing installation operations.

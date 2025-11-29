@@ -1,0 +1,24 @@
+### META
+directory_path: install/_webui.sh/frontend/sections/devices_other
+last_updated: 2025-11-28T17:15:00Z
+description: Frontend page for Other Devices section. Provides UI for configuring miscellaneous devices not covered by audio, video, or Bluetooth categories.
+notes: Placeholder template with refresh functionality.
+---
+
+### FILE
+file_name: page.html
+file_type: code
+language_or_format: html
+role: HTML template for other devices configuration page, dynamically loaded into the SPA shell.
+used_by:
+  - ../../index.html (SPA section loading)
+  - ../../common.js (DINS.API calls)
+depends_on:
+  - ../../common.css (styling)
+  - Backend: /api/devices/other/* endpoints
+status: active
+notes: Basic card layout with refresh button and loading placeholder.
+
+functions:
+  - none
+---

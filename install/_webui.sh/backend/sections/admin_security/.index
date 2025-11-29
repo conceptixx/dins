@@ -1,0 +1,140 @@
+### META
+directory_path: install/_webui.sh/backend/sections/admin_security
+last_updated: 2025-11-28T16:45:00Z
+description: Admin & Security section for the DINS WebUI. Handles admin account setup, email verification, password management, and two-factor authentication configuration.
+notes: Order 10 - first section in setup group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the admin_security section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "setup", order 10, router prefix "/admin".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for admin status, username setup, and two-factor authentication configuration.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+  - secrets directory (password files)
+status: active
+notes: Manages security.admin section of the configuration.
+
+functions:
+  - name: get_admin_status
+    kind: function
+    purpose: Returns current admin setup status including username, email verification, password status, and 2FA configuration.
+    usage_examples:
+      - GET /api/admin/status
+    parameters:
+      - none
+    returns:
+      type: AdminStatus
+      description: Object with username, email, email_verified, password_set, two_factor_required, two_factor_methods, setup_complete.
+    side_effects:
+      - Reads config file
+      - Checks password secret file existence
+    errors:
+      - condition: Config file missing
+        behavior: Returns empty/default values
+    messages:
+      - type: log
+        content: none
+
+  - name: set_admin_username
+    kind: function
+    purpose: Sets the admin username in the configuration.
+    usage_examples:
+      - POST /api/admin/username {"username": "admin"}
+    parameters:
+      - name: username
+        type: string
+        required: true
+        default: none
+        description: Admin username (minimum 3 characters).
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status and updated username.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Username too short
+        behavior: Returns HTTP 400
+    messages:
+      - type: log
+        content: none
+
+  - name: configure_two_factor
+    kind: function
+    purpose: Configures two-factor authentication settings including required status and enabled methods.
+    usage_examples:
+      - POST /api/admin/two-factor {"required": true, "email_otp_enabled": true}
+    parameters:
+      - name: required
+        type: bool
+        required: false
+        default: "true"
+        description: Whether 2FA is required.
+        allowed_values:
+          - none
+      - name: email_otp_enabled
+        type: bool
+        required: false
+        default: "true"
+        description: Enable email OTP method.
+        allowed_values:
+          - none
+      - name: totp_enabled
+        type: bool
+        required: false
+        default: "false"
+        description: Enable TOTP method.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status and updated two_factor configuration.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_two_factor_config
+    kind: function
+    purpose: Returns current two-factor authentication configuration.
+    usage_examples:
+      - GET /api/admin/two-factor
+    parameters:
+      - none
+    returns:
+      type: dict
+      description: Two-factor configuration object.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---

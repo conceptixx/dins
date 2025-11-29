@@ -1,0 +1,18 @@
+### META
+directory_path: logs
+description: DINS log files directory per GR-15 (Observability)
+created: 2025-11-29
+modified: 2025-11-29
+status: active
+
+### FILES
+service_operations.log | Log of service build/deploy/remove operations
+(other logs created by services at runtime)
+
+### RULES
+- Logs should not contain secrets
+- Rotate logs as needed
+- Include timestamps in all entries
+
+### GITIGNORE
+*.log files should be in .gitignore

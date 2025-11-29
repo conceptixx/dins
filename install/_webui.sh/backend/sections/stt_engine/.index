@@ -1,0 +1,203 @@
+### META
+directory_path: install/_webui.sh/backend/sections/stt_engine
+last_updated: 2025-11-28T17:00:00Z
+description: STT Engines section for the DINS WebUI. Handles Speech-to-Text engine selection and configuration, supporting both local (Whisper, Vosk) and cloud (Google, Azure) providers.
+notes: Order 55 - in AI group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the stt_engine section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "ai", order 55, router prefix "/stt/engine".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for STT engine listing, selection, and configuration.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages stt.engines, stt.mode, and stt.selected_engine_id in configuration.
+
+functions:
+  - name: get_engines
+    kind: function
+    purpose: Returns all STT engines from the catalog.
+    usage_examples:
+      - GET /api/stt/engine/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of STT engine objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_selected
+    kind: function
+    purpose: Returns current STT mode and selected engine.
+    usage_examples:
+      - GET /api/stt/engine/selected
+    parameters:
+      - none
+    returns:
+      type: dict
+      description: Object with mode, selected_engine_id.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: select_engine
+    kind: function
+    purpose: Sets STT mode (local/cloud/hybrid) and optionally selects an engine.
+    usage_examples:
+      - POST /api/stt/engine/select {"mode": "local", "selected_engine_id": "whisper_local"}
+    parameters:
+      - name: mode
+        type: enum
+        required: true
+        default: none
+        description: STT operation mode.
+        allowed_values:
+          - "local"
+          - "cloud"
+          - "hybrid"
+      - name: selected_engine_id
+        type: string
+        required: false
+        default: none
+        description: ID of engine to select.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status, mode, and selected_engine_id.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Invalid mode
+        behavior: Returns HTTP 400
+    messages:
+      - type: log
+        content: none
+
+  - name: update_engine
+    kind: function
+    purpose: Updates an STT engine configuration or adds a new one if not found.
+    usage_examples:
+      - PUT /api/stt/engine/{engine_id}
+    parameters:
+      - name: engine_id
+        type: string
+        required: true
+        default: none
+        description: ID of the engine.
+        allowed_values:
+          - none
+      - name: engine
+        type: object
+        required: true
+        default: none
+        description: STTEngine object with full configuration.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: delete_engine
+    kind: function
+    purpose: Deletes an STT engine from the configuration.
+    usage_examples:
+      - DELETE /api/stt/engine/{engine_id}
+    parameters:
+      - name: engine_id
+        type: string
+        required: true
+        default: none
+        description: ID of the engine to delete.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Engine not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: get_local_engines
+    kind: function
+    purpose: Returns only local STT engines.
+    usage_examples:
+      - GET /api/stt/engine/local
+    parameters:
+      - none
+    returns:
+      type: list
+      description: Filtered list of local engines.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_cloud_engines
+    kind: function
+    purpose: Returns only cloud STT engines.
+    usage_examples:
+      - GET /api/stt/engine/cloud
+    parameters:
+      - none
+    returns:
+      type: list
+      description: Filtered list of cloud engines.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---

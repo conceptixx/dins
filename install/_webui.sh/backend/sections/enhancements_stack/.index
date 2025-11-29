@@ -1,0 +1,162 @@
+### META
+directory_path: install/_webui.sh/backend/sections/enhancements_stack
+last_updated: 2025-11-28T16:45:00Z
+description: Enhancements Services section for the DINS WebUI. Handles enhancement service configuration including STT/TTS helpers, dashboards, and other supplementary services.
+notes: Order 80 - in services group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the enhancements_stack section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "services", order 80, router prefix "/services/enhancements".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing CRUD API endpoints for enhancement service configuration.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages services.enhancements section of the configuration.
+
+functions:
+  - name: get_services
+    kind: function
+    purpose: Returns all configured enhancement services.
+    usage_examples:
+      - GET /api/services/enhancements/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of enhancement service objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: add_service
+    kind: function
+    purpose: Adds a new enhancement service to the configuration.
+    usage_examples:
+      - POST /api/services/enhancements/ {"id": "dashboard", "label": "Monitoring Dashboard", ...}
+    parameters:
+      - name: service
+        type: object
+        required: true
+        default: none
+        description: Service object with id, label, group, enabled, control_mode, etc.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_service
+    kind: function
+    purpose: Updates an existing enhancement service configuration.
+    usage_examples:
+      - PUT /api/services/enhancements/{service_id}
+    parameters:
+      - name: service_id
+        type: string
+        required: true
+        default: none
+        description: ID of the service to update.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Service not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: delete_service
+    kind: function
+    purpose: Deletes an enhancement service from the configuration.
+    usage_examples:
+      - DELETE /api/services/enhancements/{service_id}
+    parameters:
+      - name: service_id
+        type: string
+        required: true
+        default: none
+        description: ID of the service to delete.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Service not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: update_all_services
+    kind: function
+    purpose: Replaces all enhancement services with the provided list.
+    usage_examples:
+      - PUT /api/services/enhancements/
+    parameters:
+      - name: services
+        type: list
+        required: true
+        default: none
+        description: Complete list of Service objects.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---

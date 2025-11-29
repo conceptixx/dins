@@ -1,0 +1,63 @@
+### META
+directory_path: testsuite/module_webui
+last_updated: 2025-11-28T15:00:00Z
+description: WebUI tests for DINS - validates FastAPI backend, frontend assets, section discovery, and Docker configuration.
+notes: Tests the WebUI without requiring a running server. All tests are read-only.
+---
+
+### FILE
+file_name: test_module_webui.py
+file_type: executable
+language_or_format: python
+role: Main test file containing all WebUI tests. Implements run_tests(config) function required by test suite.
+used_by:
+  - testsuite.py
+depends_on:
+  - testsuite.py (for ModuleResult, TestResult classes)
+status: active
+notes: Can also be run standalone with --verbose flag for debugging.
+
+functions:
+  - name: run_tests
+    description: Main entry point - runs all WebUI tests and returns ModuleResult
+  - name: test_webui_directory_exists
+    description: Validates WebUI base directory exists
+  - name: test_backend_structure
+    description: Checks required backend files
+  - name: test_frontend_structure
+    description: Checks required frontend files
+  - name: test_app_py_syntax
+    description: Validates app.py Python syntax
+  - name: test_sections_exist
+    description: Ensures at least one section exists
+  - name: test_backend_sections_complete
+    description: Validates backend section files
+  - name: test_frontend_sections_complete
+    description: Validates frontend section files
+  - name: test_section_json_valid
+    description: Validates section.json structure
+  - name: test_routes_have_router
+    description: Checks routes.py defines routers
+  - name: test_docker_files_exist
+    description: Validates Docker configuration files
+  - name: test_frontend_html_valid
+    description: Basic HTML validation
+  - name: test_manifest_exists
+    description: Checks WebUI Manifest file
+  - name: test_section_count_matches
+    description: Ensures backend/frontend section parity
+---
+
+### FILE
+file_name: README.md
+file_type: doc
+language_or_format: markdown
+role: Module documentation explaining test functions, section structure, and how to add new tests.
+used_by:
+  - Developers
+  - AI assistants
+depends_on:
+  - none
+status: active
+notes: Includes table of all WebUI sections.
+---

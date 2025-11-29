@@ -1,0 +1,1000 @@
+### META
+directory_path: install/_setup.sh
+last_updated: 2025-11-28T14:45:00Z
+description: Base installer engine directory containing the Manifest, function modules for file operations, validators for parameter checking, CLI tools (DINSER), and Docker configurations for the setup service.
+notes: This is the core installer referenced by setup.sh. All modules follow the declaration syntax specified in AI instructions - 1 - base.claude.
+---
+
+### FILE
+file_name: Manifest
+file_type: config
+language_or_format: text
+role: Declarative installation manifest that defines all installation phases and operations for the DINS system including system preparation, runtime environment setup, Docker Swarm, and DINSER CLI installation.
+used_by:
+  - install/setup.sh
+depends_on:
+  - All _*.sh modules in this directory
+  - All _validate_*.sh validators
+status: active
+notes: Main configuration file for the installer orchestrator.
+
+functions:
+  - none
+---
+
+### FILE
+file_name: _mkdir.sh
+file_type: code
+language_or_format: bash
+role: Function module for creating directories with specified permissions.
+used_by:
+  - install/setup.sh via Manifest
+depends_on:
+  - _validate_path.sh
+  - _validate_chmod_mode.sh
+status: active
+notes: Supports recursive creation and sudo operation.
+
+functions:
+  - name: _mkdir
+    kind: function
+    purpose: Creates a directory with specified path and mode.
+    usage_examples:
+      - _mkdir "PATH=/opt/dins" "MODE=755"
+    parameters:
+      - name: PATH
+        type: path
+        required: true
+        default: none
+        description: Directory path to create.
+        allowed_values:
+          - none
+      - name: MODE
+        type: string
+        required: false
+        default: "755"
+        description: Permission mode for the directory.
+        allowed_values:
+          - none
+      - name: SUDO
+        type: bool
+        required: false
+        default: "false"
+        description: Whether to use sudo for creation.
+        allowed_values:
+          - "true"
+          - "false"
+    returns:
+      type: int
+      description: Exit code (0=success, 1=config error, 2=runtime error).
+    side_effects:
+      - Creates directory on filesystem
+    errors:
+      - condition: Invalid path
+        behavior: Returns exit code 1
+      - condition: Permission denied
+        behavior: Returns exit code 2
+    messages:
+      - type: stdout
+        content: PATH=<created_path>
+---
+
+### FILE
+file_name: _copy.sh
+file_type: code
+language_or_format: bash
+role: Function module for copying files with specified permissions.
+used_by:
+  - install/setup.sh via Manifest
+depends_on:
+  - _validate_path.sh
+  - _validate_file.sh
+  - _validate_chmod_mode.sh
+status: active
+notes: Supports sudo operation.
+
+functions:
+  - name: _copy
+    kind: function
+    purpose: Copies a file from source to destination with optional mode.
+    usage_examples:
+      - _copy "SOURCE=/path/to/file" "DEST=/path/to/dest" "MODE=644"
+    parameters:
+      - name: SOURCE
+        type: path
+        required: true
+        default: none
+        description: Source file path.
+        allowed_values:
+          - none
+      - name: DEST
+        type: path
+        required: true
+        default: none
+        description: Destination file path.
+        allowed_values:
+          - none
+      - name: MODE
+        type: string
+        required: false
+        default: none
+        description: Permission mode for the copied file.
+        allowed_values:
+          - none
+      - name: SUDO
+        type: bool
+        required: false
+        default: "false"
+        description: Whether to use sudo for copying.
+        allowed_values:
+          - "true"
+          - "false"
+    returns:
+      type: int
+      description: Exit code (0=success, 1=config error, 2=runtime error).
+    side_effects:
+      - Copies file on filesystem
+      - Sets file permissions
+    errors:
+      - condition: Source file not found
+        behavior: Returns exit code 1
+      - condition: Permission denied
+        behavior: Returns exit code 2
+    messages:
+      - type: stdout
+        content: DEST=<destination_path>
+---
+
+### FILE
+file_name: _chmod.sh
+file_type: code
+language_or_format: bash
+role: Function module for changing file/directory permissions.
+used_by:
+  - install/setup.sh via Manifest
+depends_on:
+  - _validate_path.sh
+  - _validate_chmod_mode.sh
+status: active
+notes: Supports recursive and sudo operations.
+
+functions:
+  - name: _chmod
+    kind: function
+    purpose: Changes permissions on a file or directory.
+    usage_examples:
+      - _chmod "PATH=/opt/dins" "MODE=755" "RECURSIVE=true"
+    parameters:
+      - name: PATH
+        type: path
+        required: true
+        default: none
+        description: Path to modify.
+        allowed_values:
+          - none
+      - name: MODE
+        type: string
+        required: true
+        default: none
+        description: Permission mode to set.
+        allowed_values:
+          - none
+      - name: RECURSIVE
+        type: bool
+        required: false
+        default: "false"
+        description: Apply recursively.
+        allowed_values:
+          - "true"
+          - "false"
+      - name: SUDO
+        type: bool
+        required: false
+        default: "false"
+        description: Whether to use sudo.
+        allowed_values:
+          - "true"
+          - "false"
+    returns:
+      type: int
+      description: Exit code (0=success, 1=config error, 2=runtime error).
+    side_effects:
+      - Changes file permissions
+    errors:
+      - condition: Invalid path
+        behavior: Returns exit code 1
+      - condition: Permission denied
+        behavior: Returns exit code 2
+    messages:
+      - type: stdout
+        content: MODE=<applied_mode>
+---
+
+### FILE
+file_name: _chuser.sh
+file_type: code
+language_or_format: bash
+role: Function module for changing file/directory owner.
+used_by:
+  - install/setup.sh via Manifest
+depends_on:
+  - _validate_path.sh
+  - _validate_user.sh
+status: active
+notes: Supports recursive and sudo operations.
+
+functions:
+  - name: _chuser
+    kind: function
+    purpose: Changes owner of a file or directory.
+    usage_examples:
+      - _chuser "PATH=/opt/dins" "USER=root" "RECURSIVE=true"
+    parameters:
+      - name: PATH
+        type: path
+        required: true
+        default: none
+        description: Path to modify.
+        allowed_values:
+          - none
+      - name: USER
+        type: string
+        required: true
+        default: none
+        description: Username to set as owner.
+        allowed_values:
+          - none
+      - name: RECURSIVE
+        type: bool
+        required: false
+        default: "false"
+        description: Apply recursively.
+        allowed_values:
+          - "true"
+          - "false"
+      - name: SUDO
+        type: bool
+        required: false
+        default: "false"
+        description: Whether to use sudo.
+        allowed_values:
+          - "true"
+          - "false"
+    returns:
+      type: int
+      description: Exit code (0=success, 1=config error, 2=runtime error).
+    side_effects:
+      - Changes file ownership
+    errors:
+      - condition: Invalid user
+        behavior: Returns exit code 1
+      - condition: Permission denied
+        behavior: Returns exit code 2
+    messages:
+      - type: stdout
+        content: USER=<applied_user>
+---
+
+### FILE
+file_name: _chgroup.sh
+file_type: code
+language_or_format: bash
+role: Function module for changing file/directory group.
+used_by:
+  - install/setup.sh via Manifest
+depends_on:
+  - _validate_path.sh
+  - _validate_group.sh
+status: active
+notes: Supports recursive and sudo operations.
+
+functions:
+  - name: _chgroup
+    kind: function
+    purpose: Changes group of a file or directory.
+    usage_examples:
+      - _chgroup "PATH=/opt/dins" "GROUP=dins-system" "RECURSIVE=true"
+    parameters:
+      - name: PATH
+        type: path
+        required: true
+        default: none
+        description: Path to modify.
+        allowed_values:
+          - none
+      - name: GROUP
+        type: string
+        required: true
+        default: none
+        description: Group name to set.
+        allowed_values:
+          - none
+      - name: RECURSIVE
+        type: bool
+        required: false
+        default: "false"
+        description: Apply recursively.
+        allowed_values:
+          - "true"
+          - "false"
+      - name: SUDO
+        type: bool
+        required: false
+        default: "false"
+        description: Whether to use sudo.
+        allowed_values:
+          - "true"
+          - "false"
+    returns:
+      type: int
+      description: Exit code (0=success, 1=config error, 2=runtime error).
+    side_effects:
+      - Changes file group ownership
+    errors:
+      - condition: Invalid group
+        behavior: Returns exit code 1
+      - condition: Permission denied
+        behavior: Returns exit code 2
+    messages:
+      - type: stdout
+        content: GROUP=<applied_group>
+---
+
+### FILE
+file_name: _run_cmd.sh
+file_type: code
+language_or_format: bash
+role: Function module for executing shell commands.
+used_by:
+  - install/setup.sh via Manifest
+depends_on:
+  - _validate_string.sh
+status: active
+notes: Supports sudo and interactive prompts.
+
+functions:
+  - name: _run_cmd
+    kind: function
+    purpose: Executes a shell command with optional sudo.
+    usage_examples:
+      - _run_cmd "PROMPT=apt-get update" "SUDO=true"
+    parameters:
+      - name: PROMPT
+        type: string
+        required: true
+        default: none
+        description: Command to execute.
+        allowed_values:
+          - none
+      - name: SUDO
+        type: bool
+        required: false
+        default: "false"
+        description: Whether to use sudo.
+        allowed_values:
+          - "true"
+          - "false"
+      - name: DESCRIPTION
+        type: string
+        required: false
+        default: none
+        description: Human-readable description for logging.
+        allowed_values:
+          - none
+    returns:
+      type: int
+      description: Exit code from the executed command.
+    side_effects:
+      - Executes arbitrary commands on the system
+    errors:
+      - condition: Command fails
+        behavior: Returns the command's exit code
+    messages:
+      - type: stdout
+        content: Command output
+---
+
+### FILE
+file_name: _set_var.sh
+file_type: code
+language_or_format: bash
+role: Function module for setting global variables in the installer context.
+used_by:
+  - install/setup.sh via Manifest
+depends_on:
+  - _validate_string.sh
+status: active
+notes: Variables set by this module are available for placeholder resolution.
+
+functions:
+  - name: _set_var
+    kind: function
+    purpose: Sets a global variable for use in subsequent operations.
+    usage_examples:
+      - _set_var "NAME=BASE_DIR" "VALUE=/opt/dins"
+    parameters:
+      - name: NAME
+        type: string
+        required: true
+        default: none
+        description: Variable name.
+        allowed_values:
+          - none
+      - name: VALUE
+        type: string
+        required: true
+        default: none
+        description: Variable value.
+        allowed_values:
+          - none
+    returns:
+      type: int
+      description: Exit code (0=success).
+    side_effects:
+      - Sets environment variable
+    errors:
+      - condition: Empty name
+        behavior: Returns exit code 1
+    messages:
+      - type: stdout
+        content: NAME=VALUE
+---
+
+### FILE
+file_name: _symlink.sh
+file_type: code
+language_or_format: bash
+role: Function module for creating symbolic links.
+used_by:
+  - install/setup.sh via Manifest
+depends_on:
+  - _validate_path.sh
+status: active
+notes: Supports sudo and force overwrite.
+
+functions:
+  - name: _symlink
+    kind: function
+    purpose: Creates a symbolic link from target to link_path.
+    usage_examples:
+      - _symlink "TARGET=/opt/dins/cli/dinser" "LINK=/usr/local/bin/dinser"
+    parameters:
+      - name: TARGET
+        type: path
+        required: true
+        default: none
+        description: Target file/directory.
+        allowed_values:
+          - none
+      - name: LINK
+        type: path
+        required: true
+        default: none
+        description: Symlink path to create.
+        allowed_values:
+          - none
+      - name: FORCE
+        type: bool
+        required: false
+        default: "false"
+        description: Overwrite existing link.
+        allowed_values:
+          - "true"
+          - "false"
+      - name: SUDO
+        type: bool
+        required: false
+        default: "false"
+        description: Whether to use sudo.
+        allowed_values:
+          - "true"
+          - "false"
+    returns:
+      type: int
+      description: Exit code (0=success, 1=config error, 2=runtime error).
+    side_effects:
+      - Creates symbolic link on filesystem
+    errors:
+      - condition: Target not found
+        behavior: Returns exit code 1
+      - condition: Permission denied
+        behavior: Returns exit code 2
+    messages:
+      - type: stdout
+        content: LINK=<created_link>
+---
+
+### FILE
+file_name: _template.sh
+file_type: code
+language_or_format: bash
+role: Function module for processing template files with variable substitution.
+used_by:
+  - install/setup.sh via Manifest
+depends_on:
+  - _validate_path.sh
+  - _validate_file.sh
+status: active
+notes: Expands placeholders in template files using current variable context.
+
+functions:
+  - name: _template
+    kind: function
+    purpose: Processes a template file, substituting placeholders with values.
+    usage_examples:
+      - _template "SOURCE=/path/template.conf.tpl" "DEST=/etc/app.conf"
+    parameters:
+      - name: SOURCE
+        type: path
+        required: true
+        default: none
+        description: Source template file.
+        allowed_values:
+          - none
+      - name: DEST
+        type: path
+        required: true
+        default: none
+        description: Destination file.
+        allowed_values:
+          - none
+      - name: MODE
+        type: string
+        required: false
+        default: "644"
+        description: Permission mode for output file.
+        allowed_values:
+          - none
+      - name: SUDO
+        type: bool
+        required: false
+        default: "false"
+        description: Whether to use sudo.
+        allowed_values:
+          - "true"
+          - "false"
+    returns:
+      type: int
+      description: Exit code (0=success, 1=config error, 2=runtime error).
+    side_effects:
+      - Creates processed file from template
+    errors:
+      - condition: Template not found
+        behavior: Returns exit code 1
+      - condition: Unresolved placeholder
+        behavior: Returns exit code 1
+    messages:
+      - type: stdout
+        content: DEST=<created_file>
+---
+
+### FILE
+file_name: _echo.sh
+file_type: code
+language_or_format: bash
+role: Function module for displaying messages to the user.
+used_by:
+  - install/setup.sh via Manifest
+depends_on:
+  - none
+status: active
+notes: Supports different message types (info, warn, error).
+
+functions:
+  - name: _echo
+    kind: function
+    purpose: Displays a formatted message to the user.
+    usage_examples:
+      - _echo "MESSAGE=Installation complete" "TYPE=info"
+    parameters:
+      - name: MESSAGE
+        type: string
+        required: true
+        default: none
+        description: Message to display.
+        allowed_values:
+          - none
+      - name: TYPE
+        type: enum
+        required: false
+        default: "info"
+        description: Message type for formatting.
+        allowed_values:
+          - "info"
+          - "warn"
+          - "error"
+          - "success"
+    returns:
+      type: int
+      description: Exit code (0=success).
+    side_effects:
+      - Outputs to stdout/stderr
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: stdout
+        content: Formatted message
+---
+
+### FILE
+file_name: _validate_path.sh
+file_type: code
+language_or_format: bash
+role: Validator module for file/directory paths.
+used_by:
+  - _mkdir.sh, _copy.sh, _chmod.sh, _chuser.sh, _chgroup.sh, _symlink.sh, _template.sh
+depends_on:
+  - none
+status: active
+notes: Validates that a value is a valid filesystem path.
+
+functions:
+  - name: _validate_path
+    kind: function
+    purpose: Validates that a value is a valid filesystem path.
+    usage_examples:
+      - _validate_path "/opt/dins"
+    parameters:
+      - name: VALUE
+        type: string
+        required: true
+        default: none
+        description: Path value to validate.
+        allowed_values:
+          - none
+      - name: DEFAULT
+        type: string
+        required: false
+        default: none
+        description: Default value if VALUE is empty.
+        allowed_values:
+          - none
+    returns:
+      type: string
+      description: Validated path on stdout.
+    side_effects:
+      - none
+    errors:
+      - condition: Invalid path format
+        behavior: Returns exit code 1
+    messages:
+      - type: stdout
+        content: Validated path value
+---
+
+### FILE
+file_name: _validate_file.sh
+file_type: code
+language_or_format: bash
+role: Validator module for filenames.
+used_by:
+  - _copy.sh, _template.sh
+depends_on:
+  - none
+status: active
+notes: Validates that a value is a valid filename (no path separators).
+
+functions:
+  - name: _validate_file
+    kind: function
+    purpose: Validates that a value is a valid filename.
+    usage_examples:
+      - _validate_file "config.yml"
+    parameters:
+      - name: VALUE
+        type: string
+        required: true
+        default: none
+        description: Filename to validate.
+        allowed_values:
+          - none
+      - name: DEFAULT
+        type: string
+        required: false
+        default: none
+        description: Default value if VALUE is empty.
+        allowed_values:
+          - none
+    returns:
+      type: string
+      description: Validated filename on stdout.
+    side_effects:
+      - none
+    errors:
+      - condition: Invalid filename format
+        behavior: Returns exit code 1
+    messages:
+      - type: stdout
+        content: Validated filename
+---
+
+### FILE
+file_name: _validate_chmod_mode.sh
+file_type: code
+language_or_format: bash
+role: Validator module for chmod permission modes.
+used_by:
+  - _mkdir.sh, _copy.sh, _chmod.sh, _template.sh
+depends_on:
+  - none
+status: active
+notes: Validates 3-4 digit octal permission modes (e.g., 755, 0644, 1777).
+
+functions:
+  - name: _validate_chmod_mode
+    kind: function
+    purpose: Validates that a value is a valid chmod permission mode.
+    usage_examples:
+      - _validate_chmod_mode "755"
+    parameters:
+      - name: VALUE
+        type: string
+        required: true
+        default: none
+        description: Permission mode to validate.
+        allowed_values:
+          - none
+      - name: DEFAULT
+        type: string
+        required: false
+        default: "755"
+        description: Default mode if VALUE is empty.
+        allowed_values:
+          - none
+    returns:
+      type: string
+      description: Validated mode on stdout.
+    side_effects:
+      - none
+    errors:
+      - condition: Invalid mode format
+        behavior: Returns exit code 1
+    messages:
+      - type: stdout
+        content: Validated mode value
+---
+
+### FILE
+file_name: _validate_boolean.sh
+file_type: code
+language_or_format: bash
+role: Validator module for boolean values.
+used_by:
+  - All modules with boolean parameters
+depends_on:
+  - none
+status: active
+notes: Accepts true/false, yes/no, 1/0 and normalizes to "true" or "false".
+
+functions:
+  - name: _validate_boolean
+    kind: function
+    purpose: Validates and normalizes a boolean value.
+    usage_examples:
+      - _validate_boolean "yes"
+    parameters:
+      - name: VALUE
+        type: string
+        required: true
+        default: none
+        description: Boolean value to validate.
+        allowed_values:
+          - none
+      - name: DEFAULT
+        type: string
+        required: false
+        default: "false"
+        description: Default value if VALUE is empty.
+        allowed_values:
+          - "true"
+          - "false"
+    returns:
+      type: string
+      description: Normalized boolean ("true" or "false").
+    side_effects:
+      - none
+    errors:
+      - condition: Invalid boolean format
+        behavior: Returns exit code 1
+    messages:
+      - type: stdout
+        content: "true" or "false"
+---
+
+### FILE
+file_name: _validate_string.sh
+file_type: code
+language_or_format: bash
+role: Validator module for general string values.
+used_by:
+  - _run_cmd.sh, _set_var.sh, _echo.sh
+depends_on:
+  - none
+status: active
+notes: Basic string validation with optional length checks.
+
+functions:
+  - name: _validate_string
+    kind: function
+    purpose: Validates a string value.
+    usage_examples:
+      - _validate_string "hello world"
+    parameters:
+      - name: VALUE
+        type: string
+        required: true
+        default: none
+        description: String value to validate.
+        allowed_values:
+          - none
+      - name: DEFAULT
+        type: string
+        required: false
+        default: none
+        description: Default value if VALUE is empty.
+        allowed_values:
+          - none
+    returns:
+      type: string
+      description: Validated string on stdout.
+    side_effects:
+      - none
+    errors:
+      - condition: Empty string when required
+        behavior: Returns exit code 1
+    messages:
+      - type: stdout
+        content: Validated string value
+---
+
+### FILE
+file_name: _validate_user.sh
+file_type: code
+language_or_format: bash
+role: Validator module for system usernames.
+used_by:
+  - _chuser.sh
+depends_on:
+  - none
+status: active
+notes: Validates that a username exists on the system or is a valid format.
+
+functions:
+  - name: _validate_user
+    kind: function
+    purpose: Validates a system username.
+    usage_examples:
+      - _validate_user "root"
+    parameters:
+      - name: VALUE
+        type: string
+        required: true
+        default: none
+        description: Username to validate.
+        allowed_values:
+          - none
+      - name: DEFAULT
+        type: string
+        required: false
+        default: none
+        description: Default username if VALUE is empty.
+        allowed_values:
+          - none
+    returns:
+      type: string
+      description: Validated username on stdout.
+    side_effects:
+      - none
+    errors:
+      - condition: Invalid username format
+        behavior: Returns exit code 1
+    messages:
+      - type: stdout
+        content: Validated username
+---
+
+### FILE
+file_name: _validate_group.sh
+file_type: code
+language_or_format: bash
+role: Validator module for system group names.
+used_by:
+  - _chgroup.sh
+depends_on:
+  - none
+status: active
+notes: Validates that a group exists on the system or is a valid format.
+
+functions:
+  - name: _validate_group
+    kind: function
+    purpose: Validates a system group name.
+    usage_examples:
+      - _validate_group "dins-system"
+    parameters:
+      - name: VALUE
+        type: string
+        required: true
+        default: none
+        description: Group name to validate.
+        allowed_values:
+          - none
+      - name: DEFAULT
+        type: string
+        required: false
+        default: none
+        description: Default group if VALUE is empty.
+        allowed_values:
+          - none
+    returns:
+      type: string
+      description: Validated group name on stdout.
+    side_effects:
+      - none
+    errors:
+      - condition: Invalid group format
+        behavior: Returns exit code 1
+    messages:
+      - type: stdout
+        content: Validated group name
+---
+
+### FILE
+file_name: _validate_regex_3_4digits.sh
+file_type: code
+language_or_format: bash
+role: Validator module for 3-4 digit numeric values.
+used_by:
+  - _validate_chmod_mode.sh (internal)
+depends_on:
+  - none
+status: active
+notes: Validates numeric strings with exactly 3 or 4 digits.
+
+functions:
+  - name: _validate_regex_3_4digits
+    kind: function
+    purpose: Validates that a value matches 3-4 digit pattern.
+    usage_examples:
+      - _validate_regex_3_4digits "755"
+    parameters:
+      - name: VALUE
+        type: string
+        required: true
+        default: none
+        description: Value to validate.
+        allowed_values:
+          - none
+      - name: DEFAULT
+        type: string
+        required: false
+        default: none
+        description: Default value if VALUE is empty.
+        allowed_values:
+          - none
+    returns:
+      type: string
+      description: Validated numeric string on stdout.
+    side_effects:
+      - none
+    errors:
+      - condition: Does not match 3-4 digit pattern
+        behavior: Returns exit code 1
+    messages:
+      - type: stdout
+        content: Validated numeric value
+---
+
+### DIRECTORIES
+subdirectories:
+  - name: cli
+    path: install/_setup.sh/cli
+    role: Contains DINSER CLI executable, command modules, and setup scripts.
+  - name: docker
+    path: install/_setup.sh/docker
+    role: Contains Docker Compose and Dockerfile for the setup service.
+  - name: lib
+    path: install/_setup.sh/lib
+    role: Shared library functions (state.sh for state management per PART 6.1).
+---

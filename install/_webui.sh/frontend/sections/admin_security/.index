@@ -1,0 +1,24 @@
+### META
+directory_path: install/_webui.sh/frontend/sections/admin_security
+last_updated: 2025-11-28T17:15:00Z
+description: Frontend page for Admin & Security section. Provides UI for admin username setup, email verification, password configuration, and two-factor authentication settings.
+notes: Comprehensive form-based UI with status tracking.
+---
+
+### FILE
+file_name: page.html
+file_type: code
+language_or_format: html
+role: HTML template for admin security setup page, dynamically loaded into the SPA shell.
+used_by:
+  - ../../index.html (SPA section loading)
+  - ../../common.js (DINS.API calls)
+depends_on:
+  - ../../common.css (styling)
+  - Backend: /api/admin/* endpoints
+status: active
+notes: Contains 5 cards for status, username, email verification, password, and 2FA. Includes inline CSS for status-item styling.
+
+functions:
+  - none
+---

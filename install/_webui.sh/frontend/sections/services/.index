@@ -1,0 +1,22 @@
+### META
+directory_path: install/_webui.sh/frontend/sections/services
+description: Web-UI frontend for Swarm Services management per PART 9
+created: 2025-11-29
+modified: 2025-11-29
+status: active
+
+### FILES
+page.html | HTML template with service list, modals for details/build/logs/check
+page.js | JavaScript with ServicesPage object for API interaction
+
+### FEATURES
+- List all defined services with status
+- Show service details and descriptor
+- Build service images (local/remote/prebuilt modes)
+- Deploy services to swarm
+- View service logs
+- Run service diagnostics
+
+### RELATED
+backend/sections/services/ | Backend API routes
+services/ | Service definitions

@@ -1,0 +1,44 @@
+### META
+directory_path: install/_setup.sh/cli
+description: DINSER CLI tools and modular command system
+created: 2025-01-28
+modified: 2025-01-28
+status: active
+
+### FILES
+dinser | Main DINSER CLI (modular v2.0 per PART 6.5)
+dinser.old | Previous non-modular version (backup)
+setup.sh | CLI setup/installation script
+
+### DIRECTORIES
+commands/ | Modular command handlers
+
+### CLI_ARCHITECTURE
+Core commands (hardcoded in dinser):
+- version, -v, --version
+- help, -h, --help
+- status
+- setup (with --init, --from-beginning)
+- webui (subcommands: up, down, status, logs, etc.)
+
+Modular commands (auto-discovered from commands/):
+- check (diagnostics per PART 6.3)
+- test (test runner per PART 6.5.4)
+- (additional commands can be added as .sh files)
+
+### ADDING_COMMANDS
+To add a new command:
+1. Create commands/<n>.sh
+2. Define cmd_<n>() function
+3. Add # description: comment
+4. dinser auto-discovers it
+
+### DEPENDENCIES
+setup.sh referenced by dinser for setup command
+webui.sh (in parent) for webui command
+commands/*.sh for modular commands
+
+### NOTES
+Per PART 6.5.1, dinser uses:
+- Hardcoded core commands (stable, documented)
+- Dynamic command discovery (extensible)

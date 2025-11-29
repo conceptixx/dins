@@ -1,0 +1,391 @@
+### META
+directory_path: install/_webui.sh/frontend
+last_updated: 2025-11-28T16:30:00Z
+description: Single-page application frontend for the DINS Setup WebUI. Contains the main HTML entry point, shared CSS styles, JavaScript utilities, and modular section pages.
+notes: Dynamically loads section pages via API discovery.
+---
+
+### FILE
+file_name: index.html
+file_type: code
+language_or_format: html
+role: Main entry point HTML file for the DINS WebUI SPA. Provides the app shell with header, sidebar navigation, content area, and footer. Dynamically loads sections from the API.
+used_by:
+  - nginx.d/dins-setup.conf
+depends_on:
+  - common.css
+  - common.js
+  - sections/*/page.html
+  - sections/*/page.js
+status: active
+notes: Auto-discovers sections via /api/ui/sections and loads them on demand.
+
+functions:
+  - name: checkHealth
+    kind: function
+    purpose: Checks API health endpoint and updates connection status indicator.
+    usage_examples:
+      - await checkHealth()
+    parameters:
+      - none
+    returns:
+      type: void
+      description: Updates DOM connection status.
+    side_effects:
+      - Fetches /api/health
+      - Updates status indicator DOM
+    errors:
+      - condition: Fetch fails
+        behavior: Shows "Disconnected" status
+    messages:
+      - type: log
+        content: Health check errors
+
+  - name: loadSections
+    kind: function
+    purpose: Fetches section metadata from API and renders the navigation sidebar.
+    usage_examples:
+      - await loadSections()
+    parameters:
+      - none
+    returns:
+      type: void
+      description: Populates navigation and loads first section.
+    side_effects:
+      - Fetches /api/ui/sections
+      - Updates sidebar DOM
+    errors:
+      - condition: Fetch fails
+        behavior: Shows error message
+    messages:
+      - type: log
+        content: Section load errors
+
+  - name: loadConfig
+    kind: function
+    purpose: Fetches the main DINS configuration from the API.
+    usage_examples:
+      - await loadConfig()
+    parameters:
+      - none
+    returns:
+      type: void
+      description: Stores config in global variable.
+    side_effects:
+      - Fetches /api/config
+    errors:
+      - condition: Fetch fails
+        behavior: Logs error
+    messages:
+      - type: log
+        content: Config load errors
+
+  - name: renderNavigation
+    kind: function
+    purpose: Renders the sidebar navigation grouped by section categories.
+    usage_examples:
+      - renderNavigation()
+    parameters:
+      - none
+    returns:
+      type: void
+      description: Updates sidebar HTML.
+    side_effects:
+      - Updates sidebar DOM
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: loadSection
+    kind: function
+    purpose: Loads a specific section's HTML and JavaScript, then initializes it.
+    usage_examples:
+      - loadSection('admin_security')
+    parameters:
+      - name: sectionId
+        type: string
+        required: true
+        default: none
+        description: ID of the section to load.
+        allowed_values:
+          - none
+    returns:
+      type: void
+      description: Loads and displays section content.
+    side_effects:
+      - Fetches section HTML
+      - Loads section JavaScript
+      - Calls section init function
+    errors:
+      - condition: Section not found
+        behavior: Shows error message
+      - condition: HTML load fails
+        behavior: Shows error with retry button
+    messages:
+      - type: log
+        content: Section load errors
+
+  - name: loadScript
+    kind: function
+    purpose: Dynamically loads a JavaScript file and returns a promise.
+    usage_examples:
+      - await loadScript('/sections/admin_security/page.js')
+    parameters:
+      - name: src
+        type: string
+        required: true
+        default: none
+        description: Script URL to load.
+        allowed_values:
+          - none
+    returns:
+      type: Promise
+      description: Resolves when script loads, rejects on error.
+    side_effects:
+      - Adds script tag to DOM
+    errors:
+      - condition: Script load fails
+        behavior: Rejects promise
+    messages:
+      - type: log
+        content: none
+---
+
+### FILE
+file_name: common.css
+file_type: code
+language_or_format: css
+role: Shared CSS stylesheet providing design system variables, layout components, form styles, buttons, tables, cards, modals, and responsive utilities for the DINS WebUI.
+used_by:
+  - index.html
+  - sections/*/page.html
+depends_on:
+  - none
+status: active
+notes: Uses CSS custom properties for theming. Mobile-responsive at 768px breakpoint.
+
+functions:
+  - none
+---
+
+### FILE
+file_name: common.js
+file_type: code
+language_or_format: javascript
+role: Shared JavaScript utilities providing API helpers, toast notifications, form utilities, dialog system, and loading state management for the DINS WebUI.
+used_by:
+  - index.html
+  - sections/*/page.js
+depends_on:
+  - none
+status: active
+notes: Exports global DINS object with API, Toast, Form, Utils, Dialog, Loading modules.
+
+functions:
+  - name: API.get
+    kind: method
+    purpose: Performs a GET request to the API and returns parsed JSON.
+    usage_examples:
+      - const data = await DINS.API.get('/config')
+    parameters:
+      - name: endpoint
+        type: string
+        required: true
+        default: none
+        description: API endpoint path (without /api prefix).
+        allowed_values:
+          - none
+    returns:
+      type: object
+      description: Parsed JSON response.
+    side_effects:
+      - HTTP fetch request
+    errors:
+      - condition: Non-OK response
+        behavior: Throws Error with status
+    messages:
+      - type: log
+        content: none
+
+  - name: API.post
+    kind: method
+    purpose: Performs a POST request to the API with JSON body.
+    usage_examples:
+      - await DINS.API.post('/setup/verify-email', {email, code})
+    parameters:
+      - name: endpoint
+        type: string
+        required: true
+        default: none
+        description: API endpoint path.
+        allowed_values:
+          - none
+      - name: data
+        type: object
+        required: false
+        default: "{}"
+        description: Request body data.
+        allowed_values:
+          - none
+    returns:
+      type: object
+      description: Parsed JSON response.
+    side_effects:
+      - HTTP fetch request
+    errors:
+      - condition: Non-OK response
+        behavior: Throws Error with detail from response
+    messages:
+      - type: log
+        content: none
+
+  - name: API.put
+    kind: method
+    purpose: Performs a PUT request to the API with JSON body.
+    usage_examples:
+      - await DINS.API.put('/config', config)
+    parameters:
+      - name: endpoint
+        type: string
+        required: true
+        default: none
+        description: API endpoint path.
+        allowed_values:
+          - none
+      - name: data
+        type: object
+        required: false
+        default: "{}"
+        description: Request body data.
+        allowed_values:
+          - none
+    returns:
+      type: object
+      description: Parsed JSON response.
+    side_effects:
+      - HTTP fetch request
+    errors:
+      - condition: Non-OK response
+        behavior: Throws Error with detail from response
+    messages:
+      - type: log
+        content: none
+
+  - name: Toast.show
+    kind: method
+    purpose: Displays a toast notification with the specified message and type.
+    usage_examples:
+      - DINS.Toast.show('Saved!', 'success', 3000)
+    parameters:
+      - name: message
+        type: string
+        required: true
+        default: none
+        description: Message to display.
+        allowed_values:
+          - none
+      - name: type
+        type: enum
+        required: false
+        default: "info"
+        description: Toast type for styling.
+        allowed_values:
+          - "info"
+          - "success"
+          - "warning"
+          - "error"
+      - name: duration
+        type: int
+        required: false
+        default: "3000"
+        description: Display duration in milliseconds.
+        allowed_values:
+          - none
+    returns:
+      type: void
+      description: none
+    side_effects:
+      - Creates DOM element
+      - Auto-removes after duration
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: Dialog.confirm
+    kind: method
+    purpose: Shows a confirmation dialog and returns a promise that resolves to user's choice.
+    usage_examples:
+      - const confirmed = await DINS.Dialog.confirm('Delete item?', 'Confirm Delete')
+    parameters:
+      - name: message
+        type: string
+        required: true
+        default: none
+        description: Message to display.
+        allowed_values:
+          - none
+      - name: title
+        type: string
+        required: false
+        default: "Confirm"
+        description: Dialog title.
+        allowed_values:
+          - none
+    returns:
+      type: bool
+      description: True if confirmed, false if cancelled.
+    side_effects:
+      - Creates modal DOM
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: Loading.button
+    kind: method
+    purpose: Sets a button to loading or normal state with spinner and disabled attribute.
+    usage_examples:
+      - DINS.Loading.button(btn, true)
+    parameters:
+      - name: button
+        type: object
+        required: true
+        default: none
+        description: Button DOM element.
+        allowed_values:
+          - none
+      - name: loading
+        type: bool
+        required: false
+        default: "true"
+        description: Whether to show loading state.
+        allowed_values:
+          - "true"
+          - "false"
+    returns:
+      type: void
+      description: none
+    side_effects:
+      - Modifies button DOM
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---
+
+### DIRECTORIES
+subdirectories:
+  - name: sections
+    path: install/_webui.sh/frontend/sections
+    role: Contains modular frontend page directories, each with page.html and page.js.
+---

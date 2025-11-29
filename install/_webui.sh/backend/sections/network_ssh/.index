@@ -1,0 +1,199 @@
+### META
+directory_path: install/_webui.sh/backend/sections/network_ssh
+last_updated: 2025-11-28T17:00:00Z
+description: Network & SSH Discovery section for the DINS WebUI. Handles network scanning permissions, scan range configuration, SSH password storage, and Raspberry Pi discovery.
+notes: Order 20 - in setup group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the network_ssh section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "setup", order 20, router prefix "/network".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for network/SSH permissions, scan ranges, SSH password storage, and network/SSH scanning operations.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+  - secrets directory (SSH password)
+  - arp-scan (for network scanning)
+status: active
+notes: Manages security.permissions, discovery.scan_ranges, discovery.ssh_defaults, and discovery.nodes.
+
+functions:
+  - name: get_permissions
+    kind: function
+    purpose: Returns current network/SSH scan permissions.
+    usage_examples:
+      - GET /api/network/permissions
+    parameters:
+      - none
+    returns:
+      type: dict
+      description: Object with allow_network_scan, allow_ssh_scan booleans.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_permissions
+    kind: function
+    purpose: Updates network/SSH scan permissions.
+    usage_examples:
+      - POST /api/network/permissions {"allow_network_scan": true, "allow_ssh_scan": true}
+    parameters:
+      - name: allow_network_scan
+        type: bool
+        required: true
+        default: none
+        description: Whether network scanning is permitted.
+        allowed_values:
+          - none
+      - name: allow_ssh_scan
+        type: bool
+        required: true
+        default: none
+        description: Whether SSH scanning is permitted.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_scan_ranges
+    kind: function
+    purpose: Returns configured network scan ranges.
+    usage_examples:
+      - GET /api/network/scan-ranges
+    parameters:
+      - none
+    returns:
+      type: dict
+      description: Object with scan_ranges list.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_scan_ranges
+    kind: function
+    purpose: Updates network scan ranges.
+    usage_examples:
+      - POST /api/network/scan-ranges {"scan_ranges": ["192.168.1.0/24"]}
+    parameters:
+      - name: scan_ranges
+        type: list
+        required: true
+        default: none
+        description: List of CIDR ranges to scan.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status and updated ranges.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: set_ssh_password
+    kind: function
+    purpose: Stores SSH password for Pi user discovery in a secret file.
+    usage_examples:
+      - POST /api/network/ssh-password {"password": "raspberry"}
+    parameters:
+      - name: password
+        type: string
+        required: true
+        default: none
+        description: SSH password to store.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Creates secret file with mode 0600
+    errors:
+      - condition: Permission denied
+        behavior: Raises exception
+    messages:
+      - type: log
+        content: none
+
+  - name: run_network_scan
+    kind: function
+    purpose: Runs network scan using arp-scan to discover hosts.
+    usage_examples:
+      - POST /api/network/scan
+    parameters:
+      - none
+    returns:
+      type: NetworkScanResult
+      description: Object with status, ranges_scanned, hosts_found, hosts list.
+    side_effects:
+      - Executes arp-scan command
+    errors:
+      - condition: Network scanning not permitted
+        behavior: Returns HTTP 403
+    messages:
+      - type: log
+        content: none
+
+  - name: run_ssh_scan
+    kind: function
+    purpose: Runs SSH scan to discover Raspberry Pis with SSH access.
+    usage_examples:
+      - POST /api/network/ssh-scan
+    parameters:
+      - none
+    returns:
+      type: SSHScanResult
+      description: Object with status, nodes_found, nodes list.
+    side_effects:
+      - Attempts SSH connections
+      - Updates discovery.nodes in config
+    errors:
+      - condition: SSH scanning not permitted
+        behavior: Returns HTTP 403
+      - condition: SSH password not configured
+        behavior: Returns HTTP 400
+    messages:
+      - type: log
+        content: none
+---

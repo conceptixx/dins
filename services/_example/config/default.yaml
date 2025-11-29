@@ -1,0 +1,20 @@
+# Example Service Default Configuration
+# ======================================
+# This file is mounted read-only into the container
+# Do NOT put secrets here - use system/secrets/
+
+# Application settings
+app:
+  name: example-service
+  debug: false
+
+# Logging configuration
+logging:
+  level: info
+  format: json
+
+# Server settings
+server:
+  host: 0.0.0.0
+  port: 8080
+  timeout: 30

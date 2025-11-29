@@ -1,0 +1,34 @@
+### META
+directory_path: testsuite/module_check
+description: Tests for dinser check troubleshooting command per PART 6.3
+created: 2025-01-28
+modified: 2025-01-28
+status: active
+
+### FILES
+test_module_check.py | Main test module with run_tests() function
+README.md | Module documentation
+
+### TESTS
+test_check_command_exists | Verifies check.sh exists
+test_check_module_syntax | Validates bash syntax
+test_check_has_description | Checks for description comment
+test_check_help | Validates help output
+test_check_webui_runs | Tests command execution
+test_check_produces_summary | Verifies STATUS output
+test_check_unknown_target | Tests error handling
+test_check_targets_equivalent | Confirms target aliases
+test_check_exit_codes | Validates exit code semantics
+
+### TARGETS_TESTED
+web-ui | Primary WebUI check target
+dins-setup.local | Alias for web-ui
+webui | Shorthand alias
+
+### DEPENDENCIES
+testsuite.py | Main test suite framework
+subprocess | For running dinser commands
+
+### NOTES
+Tests validate PART 6.3 troubleshooting mechanic.
+Command must exist at install/_setup.sh/cli/commands/check.sh.

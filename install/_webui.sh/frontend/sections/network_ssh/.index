@@ -1,0 +1,24 @@
+### META
+directory_path: install/_webui.sh/frontend/sections/network_ssh
+last_updated: 2025-11-28T17:15:00Z
+description: Frontend page for Network & SSH Discovery section. Provides UI for scan permissions, SSH password storage, scan ranges, and running network/SSH discovery.
+notes: Comprehensive form-based UI with discovery results display.
+---
+
+### FILE
+file_name: page.html
+file_type: code
+language_or_format: html
+role: HTML template for network/SSH discovery page, dynamically loaded into the SPA shell.
+used_by:
+  - ../../index.html (SPA section loading)
+  - ../../common.js (DINS.API calls)
+depends_on:
+  - ../../common.css (styling)
+  - Backend: /api/network/* endpoints
+status: active
+notes: Contains 5 cards for permissions, SSH password, scan ranges, discovery actions, and discovered nodes table. Calls runNetworkScan(), runSSHScan(), refreshNodes().
+
+functions:
+  - none
+---

@@ -1,0 +1,23 @@
+# DINS Setup State File
+# Location: /var/lib/dins/setup_state (production) or dins/state/setup_state (dev)
+#
+# Format: phaseN:step_id:status
+# Status values: start, completed, warning, skipped, not_assigned
+#
+# This file is created by setup.sh to track progress through installation phases.
+# The dinser CLI reads this file to determine where to resume setup after reboot.
+#
+# Phase Order (per PART 6.1.2):
+#   Phase 1: Runtime Environment Setup
+#   Phase 2: DINSER CLI Installation
+#   Phase 3: System Preparation
+#   Phase 4: Docker Swarm Setup
+#   Phase 5: Setup Docker Service Deployment
+#   Phase 6: Final Setup Routine
+#
+# Example entries:
+#   phase1:install_packages:start
+#   phase1:install_packages:completed
+#   phase2:install_dinser:completed
+#   phase3:configure_hostname:warning
+#

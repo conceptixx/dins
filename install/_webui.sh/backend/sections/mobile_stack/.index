@@ -1,0 +1,162 @@
+### META
+directory_path: install/_webui.sh/backend/sections/mobile_stack
+last_updated: 2025-11-28T17:00:00Z
+description: Mobile Services section for the DINS WebUI. Handles mobile service configuration including WebRTC, mobile proxies, and PWA backends.
+notes: Order 85 - in services group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the mobile_stack section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "services", order 85, router prefix "/services/mobile".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing CRUD API endpoints for mobile service configuration.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages services.mobile section of the configuration.
+
+functions:
+  - name: get_services
+    kind: function
+    purpose: Returns all configured mobile services.
+    usage_examples:
+      - GET /api/services/mobile/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of mobile service objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: add_service
+    kind: function
+    purpose: Adds a new mobile service to the configuration.
+    usage_examples:
+      - POST /api/services/mobile/ {"id": "webrtc-gateway", ...}
+    parameters:
+      - name: service
+        type: object
+        required: true
+        default: none
+        description: Service object with id, label, group, enabled, etc.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_service
+    kind: function
+    purpose: Updates an existing mobile service configuration.
+    usage_examples:
+      - PUT /api/services/mobile/{service_id}
+    parameters:
+      - name: service_id
+        type: string
+        required: true
+        default: none
+        description: ID of the service to update.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Service not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: delete_service
+    kind: function
+    purpose: Deletes a mobile service from the configuration.
+    usage_examples:
+      - DELETE /api/services/mobile/{service_id}
+    parameters:
+      - name: service_id
+        type: string
+        required: true
+        default: none
+        description: ID of the service to delete.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Service not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: update_all_services
+    kind: function
+    purpose: Replaces all mobile services with the provided list.
+    usage_examples:
+      - PUT /api/services/mobile/
+    parameters:
+      - name: services
+        type: list
+        required: true
+        default: none
+        description: Complete list of Service objects.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---

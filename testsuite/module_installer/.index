@@ -1,0 +1,67 @@
+### META
+directory_path: testsuite/module_installer
+last_updated: 2025-11-28T15:00:00Z
+description: Installer tests for DINS - validates Manifest parsing, shell modules, validators, CLI tools, and Docker setup.
+notes: Tests the installer without executing any installation operations. All tests are read-only and safe.
+---
+
+### FILE
+file_name: test_module_installer.py
+file_type: executable
+language_or_format: python
+role: Main test file containing all installer tests. Implements run_tests(config) function required by test suite.
+used_by:
+  - testsuite.py
+depends_on:
+  - testsuite.py (for ModuleResult, TestResult classes)
+status: active
+notes: Can also be run standalone with --verbose flag for debugging.
+
+functions:
+  - name: run_tests
+    description: Main entry point - runs all installer tests and returns ModuleResult
+  - name: test_install_directory_exists
+    description: Validates install directory exists
+  - name: test_setup_module_exists
+    description: Checks _setup.sh module directory
+  - name: test_setup_manifest_exists
+    description: Validates Manifest file present
+  - name: test_setup_manifest_valid
+    description: Parses Manifest for syntax
+  - name: test_manifest_operations_valid
+    description: Validates operation fields
+  - name: test_operation_scripts_exist
+    description: Checks expected operation scripts
+  - name: test_operation_scripts_valid
+    description: Validates shell script syntax
+  - name: test_validator_scripts_exist
+    description: Checks validator scripts
+  - name: test_cli_directory_exists
+    description: Validates CLI directory
+  - name: test_dinser_cli_exists
+    description: Checks dinser CLI tool
+  - name: test_dinser_cli_valid
+    description: Validates dinser syntax
+  - name: test_docker_setup_exists
+    description: Checks Docker setup files
+  - name: test_main_scripts_exist
+    description: Validates main installer scripts
+  - name: test_main_scripts_valid
+    description: Validates main script syntax
+  - name: test_all_manifests_parseable
+    description: Recursively validates all Manifests
+---
+
+### FILE
+file_name: README.md
+file_type: doc
+language_or_format: markdown
+role: Module documentation explaining Manifest syntax, operation scripts, validators, and how to add new tests.
+used_by:
+  - Developers
+  - AI assistants
+depends_on:
+  - none
+status: active
+notes: Includes comprehensive Manifest syntax reference.
+---

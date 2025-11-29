@@ -1,0 +1,58 @@
+### META
+directory_path: testsuite
+description: DINS test suite framework per PART 4, PART 5, PART 6, and PART 9
+created: 2025-01-28
+modified: 2025-11-29
+status: active
+
+### FILES
+testsuite.py | Main test runner with module discovery
+README.md | Test suite documentation and usage
+
+### DIRECTORIES
+logs/ | Test execution logs
+module_core/ | Core system validation tests
+module_installer/ | Installer component tests
+module_webui/ | WebUI component tests
+module_cli/ | CLI tool tests per PART 5.3
+module_web/ | Web endpoint tests per PART 5.2
+module_check/ | Check command tests per PART 6.3
+module_setup/ | Setup state tests per PART 6.1
+module_service/ | Service construction tests per PART 9
+
+### MODULE_STRUCTURE
+Each module_* directory contains:
+- test_module_*.py: Main test file with run_tests() function
+- README.md: Module documentation
+- .index: Module metadata
+
+### USAGE
+Run all tests: python testsuite.py
+Run specific module: python testsuite.py --module <n>
+Run multiple: python testsuite.py --module cli web check setup service
+Pre-deployment: python testsuite.py --pre-deployment
+List modules: python testsuite.py --list
+
+### CLI_INTEGRATION
+Tests can also be run via: dinser test [options]
+See install/_setup.sh/cli/commands/test.sh
+
+### DEPENDENCIES
+Python 3.x required
+PyYAML for service tests
+No external packages needed for basic tests
+
+### COVERAGE
+Per PART 5, PART 6, and PART 9:
+- Web endpoint testing (module_web)
+- CLI command testing (module_cli)
+- Troubleshooting mechanic testing (module_check)
+- Setup state management testing (module_setup)
+- Service construction testing (module_service)
+- Integration with executable scripts
+
+### NOTES
+All tests are non-destructive by default.
+Online tests (web) are skipped if no server is available.
+Setup state tests run in isolated temp directories.
+Service tests validate descriptor structure and CLI availability.

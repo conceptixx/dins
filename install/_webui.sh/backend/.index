@@ -1,0 +1,226 @@
+### META
+directory_path: install/_webui.sh/backend
+last_updated: 2025-11-28T16:30:00Z
+description: FastAPI backend for the DINS Setup WebUI. Contains the main application with dynamic section discovery, configuration management, and API endpoints.
+notes: Sections are discovered dynamically from the sections/ subdirectory.
+---
+
+### FILE
+file_name: app.py
+file_type: code
+language_or_format: python
+role: Main FastAPI application that provides the configuration API, dynamically discovers and loads section routers, manages the DINS configuration file, and handles admin setup, discovery, and device management.
+used_by:
+  - docker/Dockerfile.webui
+  - docker/entrypoint.sh
+depends_on:
+  - sections/*/routes.py
+  - sections/*/section.json
+status: active
+notes: Includes default catalogs for 17+ STT engines, 10+ TTS engines, 19 cloud LLM providers, and 18 local LLM providers.
+
+functions:
+  - name: get_default_stt_engines
+    kind: function
+    purpose: Returns the default catalog of STT (Speech-to-Text) engines including local (Whisper, Vosk, Coqui, DeepSpeech, Kaldi) and cloud providers.
+    usage_examples:
+      - engines = get_default_stt_engines()
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of STT engine dictionaries with id, label, type, api_url, languages, realtime, quality, latency_profile.
+    side_effects:
+      - none
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_default_tts_engines
+    kind: function
+    purpose: Returns the default catalog of TTS (Text-to-Speech) engines including local (PicoTTS, eSpeak, Coqui, OpenTTS, Mozilla) and cloud providers.
+    usage_examples:
+      - engines = get_default_tts_engines()
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of TTS engine dictionaries with id, label, type, api_url, voices, quality.
+    side_effects:
+      - none
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_default_tts_outputs
+    kind: function
+    purpose: Returns the default catalog of TTS output targets including speakers, headphones, Bluetooth devices, mobile clients, WebRTC, VoIP, and streaming endpoints.
+    usage_examples:
+      - outputs = get_default_tts_outputs()
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of TTS output dictionaries with id, label, type, node_id, transport, target_ref, enabled, priority.
+    side_effects:
+      - none
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_default_cloud_providers
+    kind: function
+    purpose: Returns the default catalog of cloud LLM providers including OpenAI, Anthropic, Google Gemini, Azure, AWS Bedrock, Cohere, Mistral, Groq, and more.
+    usage_examples:
+      - providers = get_default_cloud_providers()
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of cloud provider dictionaries with id, label, base_url, pay_to_use.
+    side_effects:
+      - none
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_default_local_providers
+    kind: function
+    purpose: Returns the default catalog of local LLM providers including llama.cpp, Ollama, TGI, vLLM, LocalAI, LM Studio, and more.
+    usage_examples:
+      - providers = get_default_local_providers()
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of local provider dictionaries with id, label, base_url, openai_compatible.
+    side_effects:
+      - none
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: health_check
+    kind: function
+    purpose: API endpoint that returns health status and timestamp.
+    usage_examples:
+      - GET /api/health
+    parameters:
+      - none
+    returns:
+      type: object
+      description: HealthResponse with status and timestamp.
+    side_effects:
+      - none
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_config
+    kind: function
+    purpose: API endpoint that returns the full DINS configuration.
+    usage_examples:
+      - GET /api/config
+    parameters:
+      - none
+    returns:
+      type: dict
+      description: Complete configuration dictionary.
+    side_effects:
+      - none
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_config
+    kind: function
+    purpose: API endpoint that updates the full DINS configuration.
+    usage_examples:
+      - PUT /api/config
+    parameters:
+      - name: config
+        type: dict
+        required: true
+        default: none
+        description: New configuration dictionary.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Validation error
+        behavior: Returns HTTP 400 with detail
+    messages:
+      - type: log
+        content: Configuration save status
+
+  - name: get_sections
+    kind: function
+    purpose: API endpoint that returns all discovered configuration sections for UI rendering.
+    usage_examples:
+      - GET /api/ui/sections
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of SectionInfo objects with id, label, order, group, frontend_path, backend_prefix.
+    side_effects:
+      - none
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: startup_event
+    kind: handler
+    purpose: Application startup handler that loads configuration, discovers sections, and loads section routers.
+    usage_examples:
+      - Automatically called by FastAPI on startup
+    parameters:
+      - none
+    returns:
+      type: none
+      description: none
+    side_effects:
+      - Loads configuration file
+      - Discovers and registers section routers
+    errors:
+      - condition: Section load failure
+        behavior: Logs error, continues
+    messages:
+      - type: log
+        content: Startup progress and status
+---
+
+### DIRECTORIES
+subdirectories:
+  - name: sections
+    path: install/_webui.sh/backend/sections
+    role: Contains modular configuration section directories, each with routes.py and section.json.
+---

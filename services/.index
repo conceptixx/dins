@@ -1,0 +1,40 @@
+### META
+directory_path: services
+description: DINS service definitions - each subdirectory contains a complete service definition per PART 9
+created: 2025-11-29
+modified: 2025-11-29
+status: active
+
+### STRUCTURE
+Each service directory MUST contain:
+- service.yaml | Service descriptor (name, type, image, runtime config)
+- src/ | Program code (if locally managed)
+- config/ | Default configuration templates (non-secret)
+- docs/ | Service-specific documentation
+- tests/ | Service-specific tests
+- Dockerfile | (optional) for local builds
+
+### SERVICE_TYPES
+core | Core DINS/DINSER infrastructure services
+agent | AI/LLM agent services
+frontend | User-facing frontends
+storage | Storage services (DRNAS, etc.)
+vpn | VPN/mesh services (Tailscale, etc.)
+stt | Speech-to-text services
+tts | Text-to-speech services
+gateway | Web gateways and proxies
+
+### BUILD_MODES (per PART 9.3)
+local-build | Build from local files in service directory
+remote-build | Build from temporary downloaded files (git clone)
+prebuilt | Use prebuilt image from registry
+
+### DIRECTORIES
+_example/ | Example service template (not deployable)
+
+### LIFECYCLE
+1. Create service directory with structure above
+2. Define service.yaml descriptor
+3. dinser service build <name> to build image
+4. dinser service deploy <name> to deploy to swarm
+5. dinser service status <name> to check status

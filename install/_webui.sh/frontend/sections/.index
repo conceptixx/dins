@@ -1,0 +1,40 @@
+### META
+directory_path: install/_webui.sh/frontend/sections
+description: Modular frontend page directories for DINS WebUI
+created: 2025-01-28
+modified: 2025-11-29
+status: active
+notes: Sections are loaded dynamically by index.html based on API discovery. Each section must have page.html and page.js.
+
+### DIRECTORIES
+admin_security/ | Admin authentication and security settings UI
+audio_stack/ | Audio service stack configuration UI
+cluster_swarm/ | Docker Swarm cluster configuration UI
+devices_audio/ | Audio device discovery and configuration UI
+devices_bluetooth/ | Bluetooth device discovery and pairing UI
+devices_other/ | Other device types configuration UI
+devices_video/ | Video/camera device configuration UI
+enhancements_stack/ | Enhancement services configuration UI
+llm_cloud/ | Cloud LLM provider configuration UI
+llm_local/ | Local LLM provider configuration UI
+mobile_stack/ | Mobile app integration configuration UI
+network_ssh/ | Network scanning and SSH node discovery UI
+nodes_selection/ | Node selection and role assignment UI
+services/ | Swarm service management UI per PART 9
+stt_engine/ | Speech-to-Text engine selection UI
+stt_input/ | STT input sources and microphone configuration UI
+tts_routing/ | Text-to-Speech output routing configuration UI
+vpn_mesh_stack/ | VPN and mesh networking configuration UI
+web_stack/ | Web services stack configuration UI
+
+### SECTION_STRUCTURE
+Each section directory contains:
+- page.html: HTML markup for the section
+- page.js: JavaScript logic for API interaction
+- .index: Section documentation
+
+### DYNAMIC_LOADING
+index.html discovers sections via:
+1. Fetching /api/sections endpoint
+2. Loading page.html into content area
+3. Executing page.js for interactivity

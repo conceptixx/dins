@@ -1,0 +1,24 @@
+### META
+directory_path: install/_webui.sh/frontend/sections/nodes_selection
+last_updated: 2025-11-28T17:15:00Z
+description: Frontend page for Node Selection section. Provides UI for selecting discovered Raspberry Pis to use as DINS nodes and assigning roles.
+notes: Table-based selection UI with checkboxes.
+---
+
+### FILE
+file_name: page.html
+file_type: code
+language_or_format: html
+role: HTML template for node selection page, dynamically loaded into the SPA shell.
+used_by:
+  - ../../index.html (SPA section loading)
+  - ../../common.js (DINS.API calls)
+depends_on:
+  - ../../common.css (styling)
+  - Backend: /api/nodes/* endpoints
+status: active
+notes: Contains table with select-all checkbox, node ID, hostname, IP, SSH status, and role columns. Calls saveNodeSelection(), toggleAllNodes().
+
+functions:
+  - none
+---

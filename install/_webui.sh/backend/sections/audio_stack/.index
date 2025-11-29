@@ -1,0 +1,181 @@
+### META
+directory_path: install/_webui.sh/backend/sections/audio_stack
+last_updated: 2025-11-28T16:45:00Z
+description: Audio Services section for the DINS WebUI. Handles audio service configuration including Janus, Jitsi, Asterisk, and other audio-related services.
+notes: Order 75 - in services group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the audio_stack section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "services", order 75, router prefix "/services/audio".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing CRUD API endpoints for audio service configuration.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages services.audio section of the configuration.
+
+functions:
+  - name: get_services
+    kind: function
+    purpose: Returns all configured audio services.
+    usage_examples:
+      - GET /api/services/audio/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of audio service objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: add_service
+    kind: function
+    purpose: Adds a new audio service to the configuration.
+    usage_examples:
+      - POST /api/services/audio/ {"id": "janus", "label": "Janus Gateway", ...}
+    parameters:
+      - name: service
+        type: object
+        required: true
+        default: none
+        description: Service object with id, label, group, enabled, control_mode, api_url, etc.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_service
+    kind: function
+    purpose: Updates an existing audio service configuration.
+    usage_examples:
+      - PUT /api/services/audio/{service_id}
+    parameters:
+      - name: service_id
+        type: string
+        required: true
+        default: none
+        description: ID of the service to update.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Service not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: delete_service
+    kind: function
+    purpose: Deletes an audio service from the configuration.
+    usage_examples:
+      - DELETE /api/services/audio/{service_id}
+    parameters:
+      - name: service_id
+        type: string
+        required: true
+        default: none
+        description: ID of the service to delete.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Service not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: update_all_services
+    kind: function
+    purpose: Replaces all audio services with the provided list.
+    usage_examples:
+      - PUT /api/services/audio/
+    parameters:
+      - name: services
+        type: list
+        required: true
+        default: none
+        description: Complete list of service objects.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_enabled_services
+    kind: function
+    purpose: Returns only enabled audio services.
+    usage_examples:
+      - GET /api/services/audio/enabled
+    parameters:
+      - none
+    returns:
+      type: list
+      description: Filtered list of enabled services.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---

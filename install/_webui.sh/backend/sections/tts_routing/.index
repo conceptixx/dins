@@ -1,0 +1,244 @@
+### META
+directory_path: install/_webui.sh/backend/sections/tts_routing
+last_updated: 2025-11-28T17:00:00Z
+description: TTS & Audio Output section for the DINS WebUI. Handles TTS engine selection and audio output routing to speakers, Bluetooth devices, mobile clients, WebRTC, and streaming endpoints.
+notes: Order 60 - in AI group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the tts_routing section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "ai", order 60, router prefix "/tts".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for TTS engine selection and audio output routing configuration.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages tts.engine, tts.engines, and tts.outputs in configuration.
+
+functions:
+  - name: get_engines
+    kind: function
+    purpose: Returns all TTS engines from the catalog.
+    usage_examples:
+      - GET /api/tts/engines
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of TTS engine objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_selected_engine
+    kind: function
+    purpose: Returns the currently selected TTS engine ID.
+    usage_examples:
+      - GET /api/tts/selected-engine
+    parameters:
+      - none
+    returns:
+      type: dict
+      description: Object with engine ID.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: select_engine
+    kind: function
+    purpose: Selects a TTS engine as the default.
+    usage_examples:
+      - POST /api/tts/select-engine?engine_id=opentts_local
+    parameters:
+      - name: engine_id
+        type: string
+        required: true
+        default: none
+        description: ID of the engine to select.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status and selected engine.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_outputs
+    kind: function
+    purpose: Returns all TTS output targets.
+    usage_examples:
+      - GET /api/tts/outputs
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of TTS output objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_output
+    kind: function
+    purpose: Updates a TTS output configuration.
+    usage_examples:
+      - PUT /api/tts/outputs/{output_id}
+    parameters:
+      - name: output_id
+        type: string
+        required: true
+        default: none
+        description: ID of the output.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update (enabled, label, priority).
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Output not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: update_all_outputs
+    kind: function
+    purpose: Replaces all TTS outputs with the provided list.
+    usage_examples:
+      - PUT /api/tts/outputs
+    parameters:
+      - name: outputs
+        type: list
+        required: true
+        default: none
+        description: Complete list of TTSOutput objects.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: add_output
+    kind: function
+    purpose: Adds a new TTS output target.
+    usage_examples:
+      - POST /api/tts/outputs {"id": "new_speaker", "label": "New Speaker", ...}
+    parameters:
+      - name: output
+        type: object
+        required: true
+        default: none
+        description: TTSOutput object.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: delete_output
+    kind: function
+    purpose: Deletes a TTS output target.
+    usage_examples:
+      - DELETE /api/tts/outputs/{output_id}
+    parameters:
+      - name: output_id
+        type: string
+        required: true
+        default: none
+        description: ID of the output to delete.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Output not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: get_enabled_outputs
+    kind: function
+    purpose: Returns only enabled outputs, sorted by priority (highest first).
+    usage_examples:
+      - GET /api/tts/outputs/enabled
+    parameters:
+      - none
+    returns:
+      type: list
+      description: Filtered and sorted list of enabled outputs.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---

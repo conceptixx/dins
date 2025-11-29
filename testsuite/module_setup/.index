@@ -1,0 +1,31 @@
+### META
+directory_path: testsuite/module_setup
+description: Tests for setup state management per PART 6.1
+created: 2025-01-28
+modified: 2025-01-28
+status: active
+
+### FILES
+test_module_setup.py | Main test module with run_tests() function
+README.md | Module documentation
+
+### TESTS
+test_state_lib_exists | Verifies state.sh exists
+test_state_lib_syntax | Validates bash syntax
+test_functions_defined | Checks required functions
+test_state_set_get | Tests state set/get
+test_state_is_completed | Tests completion check
+test_state_phase_completed | Tests phase completion
+test_state_clear_all | Tests state clearing
+test_state_file_format | Validates file format
+test_run_step_helper | Tests run_step
+test_skip_step_helper | Tests skip_step
+
+### DEPENDENCIES
+testsuite.py | Main test suite framework
+subprocess | For running bash functions
+install/_setup.sh/lib/state.sh | State management library
+
+### NOTES
+Tests run in isolated temp directories.
+Does not modify actual system state.

@@ -1,0 +1,162 @@
+### META
+directory_path: install/_webui.sh/backend/sections/devices_other
+last_updated: 2025-11-28T16:45:00Z
+description: Other Devices section for the DINS WebUI. Handles miscellaneous device types that don't fit into audio, video, or Bluetooth categories.
+notes: Order 45 - in devices group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the devices_other section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "devices", order 45, router prefix "/devices/other".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing CRUD API endpoints for miscellaneous device configuration.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages devices.other section of the configuration.
+
+functions:
+  - name: get_devices
+    kind: function
+    purpose: Returns all configured other devices.
+    usage_examples:
+      - GET /api/devices/other/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of other device objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: add_device
+    kind: function
+    purpose: Adds a new device to the configuration.
+    usage_examples:
+      - POST /api/devices/other/ {"id": "sensor1", "host": "dins-main", ...}
+    parameters:
+      - name: device
+        type: object
+        required: true
+        default: none
+        description: OtherDevice object with id, host, type, label, enabled, config.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status and device object.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_device
+    kind: function
+    purpose: Updates a device configuration.
+    usage_examples:
+      - PUT /api/devices/other/{device_id}
+    parameters:
+      - name: device_id
+        type: string
+        required: true
+        default: none
+        description: ID of the device to update.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update (enabled, label, config).
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Device not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: delete_device
+    kind: function
+    purpose: Deletes a device from the configuration.
+    usage_examples:
+      - DELETE /api/devices/other/{device_id}
+    parameters:
+      - name: device_id
+        type: string
+        required: true
+        default: none
+        description: ID of the device to delete.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Device not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: update_all_devices
+    kind: function
+    purpose: Replaces all other devices with the provided list.
+    usage_examples:
+      - PUT /api/devices/other/
+    parameters:
+      - name: devices
+        type: list
+        required: true
+        default: none
+        description: Complete list of OtherDevice objects.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---

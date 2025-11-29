@@ -1,0 +1,18 @@
+### META
+directory_path: system
+description: DINS system files - runtime state, secrets, and system-level configuration
+created: 2025-11-29
+modified: 2025-11-29
+status: active
+
+### DIRECTORIES
+secrets/ | Secret storage (NEVER in git) - per GR-5
+
+### RULES
+- secrets/ directory is EXCLUDED from git
+- Permissions: root:dinssystem, dirs 770, files 660
+- Only root and dinssystem group may access secrets
+
+### RELATED
+config/ | Non-secret configuration (safe for git)
+services/ | Service definitions

@@ -1,0 +1,132 @@
+### META
+directory_path: install/_webui.sh/backend/sections/devices_audio
+last_updated: 2025-11-28T16:45:00Z
+description: Audio Devices section for the DINS WebUI. Handles audio device discovery (microphones, speakers, arrays) and configuration.
+notes: Order 35 - in devices group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the devices_audio section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "devices", order 35, router prefix "/devices/audio".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for audio device discovery, listing, and configuration.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages devices.audio section of the configuration.
+
+functions:
+  - name: get_devices
+    kind: function
+    purpose: Returns all configured audio devices.
+    usage_examples:
+      - GET /api/devices/audio/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of audio device objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: scan_devices
+    kind: function
+    purpose: Scans for audio devices using system tools (arecord -l or similar).
+    usage_examples:
+      - POST /api/devices/audio/scan
+    parameters:
+      - none
+    returns:
+      type: dict
+      description: Status, devices_found count, and list of devices.
+    side_effects:
+      - Executes system commands
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_device
+    kind: function
+    purpose: Updates an audio device configuration.
+    usage_examples:
+      - PUT /api/devices/audio/{device_id}
+    parameters:
+      - name: device_id
+        type: string
+        required: true
+        default: none
+        description: ID of the device to update.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update (enabled, label, channels, sample_rate).
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Device not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: update_all_devices
+    kind: function
+    purpose: Replaces all audio devices with the provided list.
+    usage_examples:
+      - PUT /api/devices/audio/
+    parameters:
+      - name: devices
+        type: list
+        required: true
+        default: none
+        description: Complete list of AudioDevice objects.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---

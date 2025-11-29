@@ -1,0 +1,132 @@
+### META
+directory_path: install/_webui.sh/backend/sections/devices_video
+last_updated: 2025-11-28T16:45:00Z
+description: Video Devices section for the DINS WebUI. Handles video/camera device discovery and configuration.
+notes: Order 40 - in devices group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the devices_video section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "devices", order 40, router prefix "/devices/video".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for video device discovery, listing, and configuration.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages devices.video section of the configuration.
+
+functions:
+  - name: get_devices
+    kind: function
+    purpose: Returns all configured video devices.
+    usage_examples:
+      - GET /api/devices/video/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of video device objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: scan_devices
+    kind: function
+    purpose: Scans for video devices using v4l2-ctl or similar.
+    usage_examples:
+      - POST /api/devices/video/scan
+    parameters:
+      - none
+    returns:
+      type: dict
+      description: Status, devices_found count, and list of devices.
+    side_effects:
+      - Executes system commands
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_device
+    kind: function
+    purpose: Updates a video device configuration.
+    usage_examples:
+      - PUT /api/devices/video/{device_id}
+    parameters:
+      - name: device_id
+        type: string
+        required: true
+        default: none
+        description: ID of the device to update.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update (enabled, label, resolution, fps).
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Device not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: update_all_devices
+    kind: function
+    purpose: Replaces all video devices with the provided list.
+    usage_examples:
+      - PUT /api/devices/video/
+    parameters:
+      - name: devices
+        type: list
+        required: true
+        default: none
+        description: Complete list of VideoDevice objects.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---

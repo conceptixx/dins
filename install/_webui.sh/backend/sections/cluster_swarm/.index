@@ -1,0 +1,217 @@
+### META
+directory_path: install/_webui.sh/backend/sections/cluster_swarm
+last_updated: 2025-11-28T16:45:00Z
+description: Cluster & Swarm Setup section for the DINS WebUI. Handles hostname configuration, node installation via SSH, and Docker Swarm initialization and management.
+notes: Order 15 - second section in setup group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the cluster_swarm section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "setup", order 15, router prefix "/cluster".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for hostname management, node installation, and Docker Swarm operations.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+  - Docker CLI
+  - /etc/hostname, /etc/hosts (for hostname operations)
+status: active
+notes: Requires root privileges for hostname changes and Docker Swarm commands.
+
+functions:
+  - name: get_local_host_info
+    kind: function
+    purpose: Returns information about the local host including hostname, IP addresses, and dins-main status.
+    usage_examples:
+      - GET /api/cluster/local-info
+    parameters:
+      - none
+    returns:
+      type: LocalHostInfo
+      description: Object with current_hostname, planned_hostname, ip_addresses, is_dins_main.
+    side_effects:
+      - Executes hostname -I command
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: rename_local_hostname
+    kind: function
+    purpose: Renames the local Pi to dins-main by updating /etc/hostname and /etc/hosts.
+    usage_examples:
+      - POST /api/cluster/rename-local {"desired_hostname": "dins-main"}
+    parameters:
+      - name: desired_hostname
+        type: string
+        required: false
+        default: "dins-main"
+        description: New hostname for the local machine.
+        allowed_values:
+          - none
+    returns:
+      type: HostnameRenameResponse
+      description: Object with status, old, new, reboot_required.
+    side_effects:
+      - Writes /etc/hostname
+      - Modifies /etc/hosts
+      - Calls hostnamectl set-hostname
+    errors:
+      - condition: Permission denied
+        behavior: Returns HTTP 403
+      - condition: Write failure
+        behavior: Returns HTTP 500
+    messages:
+      - type: log
+        content: none
+
+  - name: plan_node_hostnames
+    kind: function
+    purpose: Assigns dins-nodeXX hostnames to selected nodes based on IP ordering.
+    usage_examples:
+      - POST /api/cluster/plan-node-hostnames {"nodes": [...]}
+    parameters:
+      - name: nodes
+        type: list
+        required: true
+        default: none
+        description: List of NodeHostnameEntry objects with node_id, hostname, ip.
+        allowed_values:
+          - none
+    returns:
+      type: list
+      description: List of NodeHostnameEntry with final_hostname assigned.
+    side_effects:
+      - Updates discovery.nodes in config
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: install_nodes
+    kind: function
+    purpose: Installs base DINS on selected nodes via SSH.
+    usage_examples:
+      - POST /api/cluster/install-nodes {"nodes": [...]}
+    parameters:
+      - name: nodes
+        type: list
+        required: true
+        default: none
+        description: List of NodeHostnameEntry objects to install.
+        allowed_values:
+          - none
+    returns:
+      type: list
+      description: List of NodeInstallProgress objects with status per node.
+    side_effects:
+      - SSH connections to nodes
+      - Remote installation commands
+    errors:
+      - condition: SSH connection failure
+        behavior: Returns failed status for that node
+    messages:
+      - type: log
+        content: Installation progress
+
+  - name: init_swarm
+    kind: function
+    purpose: Initializes Docker Swarm on the local node (dins-main) and returns join tokens.
+    usage_examples:
+      - POST /api/cluster/init-swarm
+    parameters:
+      - none
+    returns:
+      type: SwarmInitResponse
+      description: Object with status, manager_token, worker_token.
+    side_effects:
+      - Executes docker swarm init
+      - Updates cluster.swarm in config
+    errors:
+      - condition: Swarm init fails
+        behavior: Returns HTTP 500
+    messages:
+      - type: log
+        content: none
+
+  - name: join_swarm
+    kind: function
+    purpose: Joins a remote node to the swarm via SSH.
+    usage_examples:
+      - POST /api/cluster/join-swarm {"node_id": "node01", "ip": "192.168.1.10", "role": "worker"}
+    parameters:
+      - name: node_id
+        type: string
+        required: true
+        default: none
+        description: ID of the node to join.
+        allowed_values:
+          - none
+      - name: ip
+        type: string
+        required: true
+        default: none
+        description: IP address of the node.
+        allowed_values:
+          - none
+      - name: role
+        type: string
+        required: false
+        default: "worker"
+        description: Swarm role for the node.
+        allowed_values:
+          - "worker"
+          - "manager"
+    returns:
+      type: dict
+      description: Status and join result.
+    side_effects:
+      - SSH to remote node
+      - Executes docker swarm join
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_swarm_status
+    kind: function
+    purpose: Returns current Docker Swarm status including nodes and manager info.
+    usage_examples:
+      - GET /api/cluster/status
+    parameters:
+      - none
+    returns:
+      type: SwarmStatus
+      description: Object with enabled, manager_node, nodes, is_manager, swarm_id.
+    side_effects:
+      - Executes docker info and docker node ls
+    errors:
+      - condition: Docker not available
+        behavior: Returns default status
+    messages:
+      - type: log
+        content: none
+---

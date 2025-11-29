@@ -1,0 +1,201 @@
+### META
+directory_path: install/_webui.sh
+last_updated: 2025-11-28T16:30:00Z
+description: WebUI engine directory containing the Manifest, manifest executor, FastAPI backend, frontend SPA, and Docker configurations for the DINS Setup WebUI.
+notes: This is the main WebUI component referenced by webui.sh.
+---
+
+### FILE
+file_name: Manifest
+file_type: config
+language_or_format: text
+role: Declarative WebUI installation manifest that defines directory structure creation, permissions setup, asset deployment, default configuration, and validation. Uses the same grammar as the base installer Manifest.
+used_by:
+  - install/webui.sh
+  - execute_manifest.sh
+depends_on:
+  - backend/
+  - frontend/
+  - docker/
+status: active
+notes: 5 phases - directories, permissions, deploy, config, validation.
+
+functions:
+  - none
+---
+
+### FILE
+file_name: execute_manifest.sh
+file_type: script
+language_or_format: bash
+role: Bash script that parses and executes the WebUI Manifest file. Handles placeholder expansion, module execution with fallbacks, and creates default configuration.
+used_by:
+  - install/webui.sh (indirectly via Manifest)
+depends_on:
+  - Manifest
+status: active
+notes: Supports mkdir, copy, chmod, chuser, chgroup, run_cmd, template, and echo operations.
+
+functions:
+  - name: main
+    kind: function
+    purpose: Entry point that initializes system variables and executes the specified manifest file.
+    usage_examples:
+      - ./execute_manifest.sh Manifest
+    parameters:
+      - name: manifest_file
+        type: path
+        required: true
+        default: none
+        description: Path to the manifest file to execute.
+        allowed_values:
+          - none
+    returns:
+      type: int
+      description: Exit code (0=success, non-zero=failure).
+    side_effects:
+      - Creates directories and files
+      - Sets permissions and ownership
+      - Executes shell commands
+    errors:
+      - condition: Manifest file not found
+        behavior: Logs error and exits with code 1
+    messages:
+      - type: stdout
+        content: Progress messages for each section and operation
+
+  - name: expand_placeholders
+    kind: function
+    purpose: Replaces {%VAR%} patterns in strings with their values from GLOBAL_VARS or environment.
+    usage_examples:
+      - expand_placeholders "{%DINS_BASE_DIR%}/config"
+    parameters:
+      - name: text
+        type: string
+        required: true
+        default: none
+        description: String containing placeholders to expand.
+        allowed_values:
+          - none
+    returns:
+      type: string
+      description: String with all placeholders replaced by their values.
+    side_effects:
+      - none
+    errors:
+      - condition: Unknown variable
+        behavior: Logs warning, replaces with empty string
+    messages:
+      - type: stderr
+        content: Warning for unknown variables
+
+  - name: execute_fallback
+    kind: function
+    purpose: Executes module operations using built-in fallback implementations when module files are not available.
+    usage_examples:
+      - execute_fallback "mkdir" "path=/opt/dins" "mode=755"
+    parameters:
+      - name: module_name
+        type: string
+        required: true
+        default: none
+        description: Name of the module to execute (mkdir, copy, chmod, etc.).
+        allowed_values:
+          - mkdir
+          - copy
+          - chmod
+          - chuser
+          - chgroup
+          - run_cmd
+          - template
+          - echo
+      - name: args
+        type: list
+        required: false
+        default: none
+        description: Key=value arguments for the module.
+        allowed_values:
+          - none
+    returns:
+      type: int
+      description: Exit code (0=success, non-zero=failure).
+    side_effects:
+      - Depends on module type
+    errors:
+      - condition: Unknown module
+        behavior: Logs error and returns 1
+    messages:
+      - type: stdout
+        content: Operation progress messages
+
+  - name: parse_manifest
+    kind: function
+    purpose: Parses a manifest file line by line, extracting sections, operations, and arguments, then executes them.
+    usage_examples:
+      - parse_manifest "Manifest"
+    parameters:
+      - name: manifest_file
+        type: path
+        required: true
+        default: none
+        description: Path to the manifest file.
+        allowed_values:
+          - none
+    returns:
+      type: int
+      description: Exit code (0=success, non-zero=failure).
+    side_effects:
+      - Executes all operations defined in the manifest
+    errors:
+      - condition: Manifest file not found
+        behavior: Logs error and returns 1
+    messages:
+      - type: stdout
+        content: Section headers and operation progress
+
+  - name: create_default_config
+    kind: function
+    purpose: Creates a default dins_config.json with all required fields when template is missing.
+    usage_examples:
+      - create_default_config "/opt/dins/config/dins_config.json" "true"
+    parameters:
+      - name: destination
+        type: path
+        required: true
+        default: none
+        description: Path where config file should be created.
+        allowed_values:
+          - none
+      - name: use_sudo
+        type: bool
+        required: false
+        default: "false"
+        description: Whether to use sudo for file operations.
+        allowed_values:
+          - "true"
+          - "false"
+    returns:
+      type: int
+      description: Exit code (0=success).
+    side_effects:
+      - Creates JSON configuration file
+    errors:
+      - condition: Permission denied
+        behavior: Returns non-zero exit code
+    messages:
+      - type: log
+        content: Config file creation status
+---
+
+### DIRECTORIES
+subdirectories:
+  - name: backend
+    path: install/_webui.sh/backend
+    role: FastAPI backend application with modular configuration sections.
+  - name: docker
+    path: install/_webui.sh/docker
+    role: Docker configurations including Dockerfile, Compose, and Nginx settings.
+  - name: frontend
+    path: install/_webui.sh/frontend
+    role: Single-page application frontend with modular section pages.
+---

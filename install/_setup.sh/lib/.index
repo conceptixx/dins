@@ -1,0 +1,35 @@
+### META
+directory_path: install/_setup.sh/lib
+description: Shared library functions for DINS setup
+created: 2025-01-28
+modified: 2025-01-28
+status: active
+
+### FILES
+state.sh | State file management and MOTD handling per PART 6.1
+
+### STATE_FUNCTIONS
+setup_state_init | Initialize state directory and file
+setup_state_set | Set state for a phase:step
+setup_state_get | Get state for a phase:step
+setup_state_is_completed | Check if step is completed
+setup_state_phase_is_completed | Check if entire phase is completed
+setup_state_get_last_completed_phase | Get last completed phase number
+setup_state_clear_all | Clear all state (--from-beginning)
+setup_state_is_fully_completed | Check if setup is fully done
+
+### MOTD_FUNCTIONS
+motd_add_reminder | Add DINS setup reminder to /etc/motd
+motd_remove_reminder | Remove DINS reminder from /etc/motd
+
+### HELPER_FUNCTIONS
+run_step | Execute a step with state tracking
+skip_step | Mark a step as skipped
+
+### USAGE
+Source this file in setup.sh:
+  source "${SETUP_DIR}/lib/state.sh"
+
+### NOTES
+State file location: /var/lib/dins/setup_state (production)
+MOTD handling is Raspberry-Pi-specific per PART 6.1.5

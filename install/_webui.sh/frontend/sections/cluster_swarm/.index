@@ -1,0 +1,24 @@
+### META
+directory_path: install/_webui.sh/frontend/sections/cluster_swarm
+last_updated: 2025-11-28T17:15:00Z
+description: Frontend page for Cluster & Swarm Setup section. Provides UI for hostname configuration, Docker Swarm initialization, node discovery, and cluster management.
+notes: Complex multi-card layout with tables and status displays.
+---
+
+### FILE
+file_name: page.html
+file_type: code
+language_or_format: html
+role: HTML template for cluster/swarm setup page, dynamically loaded into the SPA shell.
+used_by:
+  - ../../index.html (SPA section loading)
+  - ../../common.js (DINS.API calls)
+depends_on:
+  - ../../common.css (styling)
+  - Backend: /api/cluster/* endpoints
+status: active
+notes: Contains 5 cards for local host info, swarm status, discovered nodes, installation, and cluster nodes. Includes inline CSS for info-row styling. Calls renameLocalHost(), initSwarm(), planNodeHostnames(), installNodes(), refreshSwarmStatus().
+
+functions:
+  - none
+---

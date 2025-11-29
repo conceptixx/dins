@@ -1,0 +1,22 @@
+### META
+directory_path: config
+description: DINS configuration files - non-secret configuration per PART 9.6
+created: 2025-11-29
+modified: 2025-11-29
+status: active
+
+### RULES
+- NO SECRETS in this directory (use system/secrets/ instead)
+- Safe to track in git
+- Services read config via DINS/DINSER injection
+
+### STRUCTURE
+services/ | Per-service runtime configuration
+global/ | Global DINS configuration
+
+### FILES
+(none yet - created as services are configured)
+
+### RELATED
+system/secrets/ | Secret storage (not in git)
+services/ | Service definitions

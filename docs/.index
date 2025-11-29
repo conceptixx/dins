@@ -1,0 +1,34 @@
+### META
+directory_path: docs
+description: Documentation directory for DINS project
+created: 2025-01-28
+modified: 2025-11-29
+status: active
+
+### FILES
+DINS_WEBUI_SETUP.md | WebUI setup and configuration documentation
+SWARM_SERVICES.md | Swarm service construction documentation per PART 9
+
+### DOCUMENTATION_TOPICS
+
+DINS_WEBUI_SETUP.md covers:
+- Installation and deployment
+- Configuration options
+- Setup wizard steps
+- API reference
+- Troubleshooting
+- Security considerations
+
+SWARM_SERVICES.md covers:
+- Service directory structure
+- service.yaml descriptor format
+- Build modes (local, remote, prebuilt)
+- CLI commands (dinser service)
+- Web-UI integration
+- Secrets handling
+- Testing
+
+### RELATED
+README.md (root) | Main entry point linking to docs
+instructions/ | AI instruction files
+testsuite/README.md | Test suite documentation

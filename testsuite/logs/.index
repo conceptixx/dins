@@ -1,0 +1,6 @@
+### META
+directory_path: testsuite/logs
+last_updated: 2025-11-28T15:00:00Z
+description: Test execution logs directory. Log files are created automatically with timestamps.
+notes: Log files follow naming pattern testsuite_YYYYMMDD_HHMMSS.log. Old logs can be safely deleted.
+---

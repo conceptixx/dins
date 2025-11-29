@@ -1,0 +1,115 @@
+# Example Service Descriptor
+# This is a template showing the canonical service.yaml structure per PART 9.2
+# Copy this directory to create a new service
+
+name: example-service
+description: Example DINS service template - demonstrates service descriptor format
+version: 1.0.0
+
+# Service type categorization
+type: core
+category: template
+
+# Image configuration - one of: local-build, remote-build, prebuilt
+image:
+  mode: local-build
+  # For local-build:
+  # tag: dins/example-service:1.0.0
+  # For prebuilt:
+  # registry: docker.io
+  # name: dins/example-service
+  # tag: 1.0.0-arm64
+  # For remote-build:
+  # (uses source section below)
+
+# Build configuration (for local-build and remote-build modes)
+build:
+  context: .
+  dockerfile: Dockerfile
+  arch: arm64
+  # build-args: (MUST NOT include secrets)
+  #   APP_VERSION: "1.0.0"
+
+# Source configuration (for remote-build mode)
+source:
+  repo_url: ""  # e.g., https://github.com/org/repo.git
+  ref: main     # branch, tag, or commit
+
+# Runtime configuration
+runtime:
+  replicas: 1
+  
+  resources:
+    limits:
+      cpus: '0.5'
+      memory: 256M
+    reservations:
+      cpus: '0.1'
+      memory: 64M
+  
+  networks:
+    - dins-internal
+  
+  ports:
+    - target: 8080
+      published: 8080
+      protocol: tcp
+      mode: ingress
+  
+  volumes:
+    - type: bind
+      source: ./config
+      target: /app/config
+      read_only: true
+    # Named volumes example:
+    # - type: volume
+    #   source: example-data
+    #   target: /app/data
+  
+  environment:
+    # Non-secret environment variables only
+    LOG_LEVEL: info
+    APP_MODE: production
+
+# Secret references (values stored in system/secrets/)
+secrets:
+  # - name: API_KEY
+  #   file: example-service/api.key
+  # - name: DB_PASSWORD
+  #   file: example-service/db_password
+
+# Health check configuration
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 10s
+
+# Dependencies on other services
+dependencies:
+  # - name: database
+  #   required: true
+  # - name: tailscale
+  #   required: false
+
+# Labels for service discovery and management
+labels:
+  dins.managed: "true"
+  dins.type: "example"
+  dins.version: "1.0.0"
+
+# Deployment constraints
+deploy:
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == worker
+  update_config:
+    parallelism: 1
+    delay: 10s
+    failure_action: rollback
+  rollback_config:
+    parallelism: 1
+    delay: 10s

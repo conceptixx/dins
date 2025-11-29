@@ -1,0 +1,23 @@
+### META
+directory_path: install/_webui.sh/docker/nginx.d
+last_updated: 2025-11-28T16:30:00Z
+description: Nginx configuration directory containing server blocks for the DINS WebUI.
+notes: Only accepts requests to Host: dins-setup.local, all others receive 444.
+---
+
+### FILE
+file_name: dins-setup.conf
+file_type: config
+language_or_format: nginx
+role: Nginx server configuration that serves the frontend static files, proxies /api/ requests to the Uvicorn backend, and enforces security headers. Only responds to dins-setup.local hostname.
+used_by:
+  - ../Dockerfile.webui
+depends_on:
+  - ../../frontend/
+  - ../../backend/app.py (via proxy)
+status: active
+notes: Default server returns 444 (connection closed) for non-matching hosts. Includes gzip, caching, WebSocket support, and security headers.
+
+functions:
+  - none
+---

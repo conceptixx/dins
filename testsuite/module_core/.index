@@ -1,0 +1,57 @@
+### META
+directory_path: testsuite/module_core
+last_updated: 2025-11-28T15:00:00Z
+description: Core system tests for DINS - validates fundamental directory structure, configuration, and file integrity.
+notes: This module should always pass before other modules are run. It tests the foundation of DINS.
+---
+
+### FILE
+file_name: test_module_core.py
+file_type: executable
+language_or_format: python
+role: Main test file containing all core system tests. Implements run_tests(config) function required by test suite.
+used_by:
+  - testsuite.py
+depends_on:
+  - testsuite.py (for ModuleResult, TestResult classes)
+status: active
+notes: Can also be run standalone with --verbose flag for debugging.
+
+functions:
+  - name: run_tests
+    description: Main entry point - runs all core tests and returns ModuleResult
+  - name: test_dins_root_exists
+    description: Validates DINS root directory exists
+  - name: test_directory_structure
+    description: Validates expected directory hierarchy
+  - name: test_root_files
+    description: Checks required root-level files
+  - name: test_install_files
+    description: Checks required install directory files
+  - name: test_root_index_valid
+    description: Validates root .index file structure
+  - name: test_all_index_files
+    description: Validates all .index files recursively
+  - name: test_section_json_files
+    description: Validates section.json files are valid JSON
+  - name: test_manifest_files_exist
+    description: Checks Manifest files exist in modules
+  - name: test_shell_scripts_syntax
+    description: Basic syntax check for shell scripts
+  - name: test_python_files_syntax
+    description: Syntax validation for Python files
+---
+
+### FILE
+file_name: README.md
+file_type: doc
+language_or_format: markdown
+role: Module documentation explaining test functions, usage, and how to add new tests.
+used_by:
+  - Developers
+  - AI assistants
+depends_on:
+  - none
+status: active
+notes: Describes each test function and its purpose.
+---

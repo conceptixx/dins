@@ -1,294 +1,213 @@
 # DINS - Distributed Intelligent Network Services
 
+<!-- Documentation Strategy: Strategy B - Root README as main entry per PART 6.2 -->
+
 ## Overview
 
-DINS (Distributed Intelligent Network Services) is a manifest-driven installation and runtime orchestration system. It provides a flexible, modular approach to system setup and service management.
+DINS (Distributed Intelligent Network Services) is a manifest-driven installation and runtime orchestration system for Raspberry Pi clusters. It provides a flexible, modular approach to system setup, service management, and troubleshooting.
 
-## Components
-
-### DINSER - DINS Execution Resolver
-
-DINSER is the command-line interface for DINS. Once installed, it can be invoked from anywhere:
+## Quick Start
 
 ```bash
-dinser setup <parameters>
-dinser status
-dinser help
-```
+# Clone the repository
+git clone https://github.com/conceptixx/dins.git
+cd dins
 
-## Installation
-
-### Prerequisites
-
-- Bash 4.x or later
-- curl, wget, git, jq (for basic operations)
-- Docker (for containerized services)
-- Root/sudo access (for system-level operations)
-
-### Quick Start
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/conceptixx/dins.git
-   cd dins
-   ```
-
-2. Run the installer:
-   ```bash
-   sudo ./install/setup.sh
-   ```
-
-3. Verify installation:
-   ```bash
-   dinser status
-   ```
-
-### Installation Options
-
-```bash
-# Standard installation
+# Run the installer
 sudo ./install/setup.sh
 
-# Debug mode (verbose output)
-DEBUG=1 sudo ./install/setup.sh
+# Check status
+dinser status
 
-# Dry run (parse without executing)
-sudo ./install/setup.sh --dry-run
+# If setup was interrupted, resume it
+dinser setup
+```
 
-# Use alternate manifest
-sudo ./install/setup.sh --manifest /path/to/Manifest
+## Documentation Index
+
+### Installation & Setup
+
+| Document | Description |
+|----------|-------------|
+| [Installation Guide](install/README.md) | Detailed installation instructions |
+| [WebUI Setup](docs/DINS_WEBUI_SETUP.md) | Web interface configuration |
+
+### Architecture & Components
+
+| Document | Description |
+|----------|-------------|
+| [Installer Modules](install/_setup.sh/README.md) | Setup module documentation |
+| [WebUI Backend](install/_webui.sh/backend/README.md) | API server documentation |
+| [WebUI Frontend](install/_webui.sh/frontend/README.md) | Frontend documentation |
+
+### Testing
+
+| Document | Description |
+|----------|-------------|
+| [Test Suite](testsuite/README.md) | Testing framework and usage |
+| [Core Tests](testsuite/module_core/README.md) | Core system validation |
+| [CLI Tests](testsuite/module_cli/README.md) | CLI tool testing |
+| [Web Tests](testsuite/module_web/README.md) | Web endpoint testing |
+
+### Troubleshooting
+
+| Command | Description |
+|---------|-------------|
+| `dinser check web-ui` | Diagnose WebUI issues |
+| `dinser status` | View system status |
+| `dinser test` | Run test suite |
+
+---
+
+## DINSER CLI
+
+DINSER is the command-line interface for DINS operations:
+
+```bash
+# Core commands
+dinser help              # Show help
+dinser version           # Show version
+dinser status            # System status
+dinser setup             # Run/resume setup
+dinser setup --init      # Fresh installation
+
+# WebUI management
+dinser webui up          # Start WebUI
+dinser webui down        # Stop WebUI
+dinser webui status      # WebUI status
+dinser webui logs        # View logs
+
+# Troubleshooting
+dinser check web-ui      # Diagnose WebUI
+dinser test              # Run tests
+dinser test --module cli # Test specific module
 ```
 
 ## Repository Structure
 
 ```
 dins/
-├── install/
-│   ├── setup.sh              # Main installer orchestrator
-│   └── _setup.sh/
-│       ├── Manifest          # Installation manifest
-│       ├── _mkdir.sh         # Directory creation module
-│       ├── _copy.sh          # File copy module
-│       ├── _chmod.sh         # Permission change module
-│       ├── _chuser.sh        # Owner change module
-│       ├── _chgroup.sh       # Group change module
-│       ├── _run_cmd.sh       # Command execution module
-│       ├── _set_var.sh       # Variable setting module
-│       ├── _symlink.sh       # Symlink creation module
-│       ├── _template.sh      # Template processing module
-│       ├── _echo.sh          # Message display module
-│       ├── _validate_path.sh         # Path validator
-│       ├── _validate_file.sh         # Filename validator
-│       ├── _validate_chmod_mode.sh   # Permission mode validator
-│       ├── _validate_boolean.sh      # Boolean validator
-│       ├── _validate_string.sh       # String validator
-│       ├── _validate_user.sh         # Username validator
-│       ├── _validate_group.sh        # Group name validator
-│       ├── _validate_regex_3_4digits.sh  # Numeric validator
-│       ├── cli/
-│       │   ├── dinser        # DINSER CLI executable
-│       │   └── setup.sh      # DINSER setup script
-│       └── docker/
-│           ├── docker-compose.setup.yml  # Setup service compose
-│           └── Dockerfile.setup          # Setup service Dockerfile
+├── install/                    # Installation system
+│   ├── setup.sh               # Main installer
+│   ├── webui.sh               # WebUI management
+│   ├── _setup.sh/             # Setup modules
+│   │   ├── Manifest           # Installation steps
+│   │   ├── cli/               # DINSER CLI
+│   │   │   ├── dinser         # Main CLI
+│   │   │   └── commands/      # Modular commands
+│   │   └── docker/            # Docker configs
+│   └── _webui.sh/             # WebUI system
+│       ├── backend/           # FastAPI server
+│       ├── frontend/          # HTML/JS frontend
+│       └── docker/            # Container configs
+├── testsuite/                  # Test framework
+│   ├── testsuite.py           # Main runner
+│   ├── module_core/           # Core tests
+│   ├── module_cli/            # CLI tests
+│   ├── module_web/            # Web tests
+│   └── ...
+├── docs/                       # Documentation
+├── state/                      # State tracking
+└── instructions/               # AI instructions
 ```
 
-## Manifest Syntax
-
-The Manifest file uses a custom syntax with sections, operations, and parameters.
-
-### Comments
-
-```
-; this is a comment
-# this is also a comment
-```
-
-### Sections
-
-```
-[SECTION_NAME:section_description]
-```
-
-### Operations
-
-```
-[mySection:description]
-  operation_name:label
-    param1="value1"
-    param2="value2"
-```
-
-### Inline Parameters (Daisy-chained)
-
-```
-run_cmd:sudo:prompt="apt-get update -y"
-```
-
-### Placeholders
-
-Placeholders use the format `{%NAME%}` and are expanded before passing to modules:
-
-```
-mkdir:create_dir
-  path="{%BASE_DIR%}/scripts"
-```
-
-## Module Declaration
-
-Each module begins with a declaration block:
+## Installation Options
 
 ```bash
-# declaration
-# location: {%BASE_DIR%}/scripts/system/fileinfo/_mkdir.sh
-# input: PATH+
-# input: MODE*=755
-# validate: PATH=path
-# validate: MODE=chmod_mode
-# output: PATH:LAST
+# Standard installation
+sudo ./install/setup.sh
+
+# Debug mode
+DEBUG=1 sudo ./install/setup.sh
+
+# Dry run (no changes)
+sudo ./install/setup.sh --dry-run
+
+# Resume after reboot
+dinser setup
+
+# Restart from beginning
+dinser setup --from-beginning
 ```
 
-### Input Cardinality
+## Setup Phases
 
-- `.` - exactly one value required
-- `*` - optional (zero or one)
-- `+` - one or more required
+The installation proceeds through these phases (per PART 6.1):
 
-### Validators
+1. **Runtime Environment** - Packages, Python, Docker
+2. **CLI Installation** - dinser available before reboot
+3. **System Preparation** - Hostname, network, system tweaks
+4. **Docker Swarm** - Swarm init, networks, labels
+5. **Service Deployment** - Deploy DINS services
+6. **Final Routine** - Cleanup, verification
 
-Validators are defined as `_validate_<ID>.sh` and referenced in declarations:
+If interrupted, `dinser setup` resumes from the last incomplete phase.
+
+## Testing
 
 ```bash
-# validate: PATH=path
-# validate: MODE=chmod_mode
+# Run all tests
+dinser test
+
+# Run specific module
+dinser test --module cli
+
+# Pre-deployment validation
+dinser test --pre-deployment
+
+# List available modules
+dinser test --list
 ```
 
-## DINSER Commands
+## Troubleshooting
 
-### Setup
+### WebUI not accessible
 
 ```bash
-# Initialize DINS system
-dinser setup --init
+# Run diagnostics
+dinser check web-ui
 
-# Setup CLI interface
-dinser setup cli-ui
-
-# Setup web interface
-dinser setup web-ui
-
-# Setup a specific service
-dinser setup service myservice
+# This checks:
+# - DNS resolution
+# - Network reachability
+# - Port availability
+# - Docker services
+# - HTTP responses
 ```
 
-### Status
+### View system status
 
 ```bash
-# Show status
 dinser status
-
-# JSON output
-dinser status --json
 ```
 
-### Help
+### Check logs
 
 ```bash
-# General help
-dinser help
-
-# Command-specific help
-dinser help setup
+dinser webui logs
 ```
-
-## Creating Custom Modules
-
-### Function Module Template
-
-```bash
-#!/usr/bin/env bash
-# declaration
-# location: {%BASE_DIR%}/scripts/custom/_mymodule.sh
-# input: PARAM1.
-# input: PARAM2*=default
-# validate: PARAM1=string
-# output: RESULT:LAST
-
-_mymodule() {
-    local param1=""
-    local param2="default"
-    
-    for arg in "$@"; do
-        case "$arg" in
-            PARAM1=*) param1="${arg#PARAM1=}" ;;
-            PARAM2=*) param2="${arg#PARAM2=}" ;;
-        esac
-    done
-    
-    # Validation
-    if [[ -z "$param1" ]]; then
-        echo "ERROR: PARAM1 is required"
-        return 1
-    fi
-    
-    # Implementation
-    # ...
-    
-    echo "RESULT=success"
-    return 0
-}
-
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    _mymodule "$@"
-fi
-```
-
-### Validator Module Template
-
-```bash
-#!/usr/bin/env bash
-# declaration
-# location: {%BASE_DIR%}/scripts/system/validate/_validate_mytype.sh
-# input: VALUE.
-# input: DEFAULT.*
-# output: VALUE:VALIDATED
-
-_validate_mytype() {
-    local value="$1"
-    local default="$2"
-    
-    if [[ -z "$value" ]]; then
-        value="$default"
-    fi
-    
-    # Validation logic
-    if [[ ! "$value" =~ ^valid_pattern$ ]]; then
-        echo "ERROR: Invalid value"
-        return 1
-    fi
-    
-    echo "$value"
-    return 0
-}
-
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    _validate_mytype "$@"
-fi
-```
-
-## Exit Codes
-
-- `0` - Success
-- `1` - Configuration error (invalid parameters, missing required input)
-- `2` - Runtime error (system failure, I/O, permissions)
 
 ## Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `DINS_BASE_DIR` | Base directory for DINS installation |
-| `DEBUG` | Set to `1` for debug output |
-| `TMP_PATH` | Staging directory for dry-run |
+| `DEBUG` | Set to `1` for verbose output |
+| `DINS_ROOT` | Override DINS base directory |
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Configuration/validation error |
+| 2 | Runtime error |
+
+## Prerequisites
+
+- Raspberry Pi OS or Debian-based Linux
+- Bash 4.x+
+- Docker (installed automatically)
+- Python 3.x (for test suite)
 
 ## License
 
@@ -298,9 +217,9 @@ MIT License - see LICENSE file for details.
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
+3. Run tests: `dinser test`
 4. Submit a pull request
 
 ## Support
 
-For issues and feature requests, please use the GitHub issue tracker.
+For issues and feature requests, use the GitHub issue tracker.

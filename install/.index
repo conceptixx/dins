@@ -1,0 +1,138 @@
+### META
+directory_path: install
+last_updated: 2025-11-28T14:42:00Z
+description: Main installation directory containing the orchestrators (setup.sh, webui.sh) and all installation-related components including Manifests, function modules, validators, Docker configurations, and CLI tools.
+notes: This directory contains both the base installer (_setup.sh/) and the WebUI installer (_webui.sh/).
+---
+
+### FILE
+file_name: setup.sh
+file_type: script
+language_or_format: bash
+role: Main installer orchestrator that reads the Manifest, parses sections and operations, resolves placeholders, loads modules and validators, and dispatches installation operations.
+used_by:
+  - dinser setup command
+  - Manual installation
+depends_on:
+  - _setup.sh/Manifest
+  - _setup.sh/_*.sh modules
+  - _setup.sh/_validate_*.sh validators
+status: active
+notes: Core orchestrator with no hard-coded install logic.
+
+functions:
+  - name: main
+    kind: function
+    purpose: Entry point that orchestrates the entire installation process by reading and executing the Manifest.
+    usage_examples:
+      - sudo ./install/setup.sh
+      - DEBUG=1 sudo ./install/setup.sh
+      - sudo ./install/setup.sh --dry-run
+    parameters:
+      - name: --dry-run
+        type: bool
+        required: false
+        default: "false"
+        description: Parse Manifest without executing operations.
+        allowed_values:
+          - none
+      - name: --manifest
+        type: path
+        required: false
+        default: "_setup.sh/Manifest"
+        description: Path to alternate Manifest file.
+        allowed_values:
+          - none
+      - name: --max-phase
+        type: int
+        required: false
+        default: none
+        description: Stop after specified phase number.
+        allowed_values:
+          - none
+    returns:
+      type: int
+      description: Exit code (0=success, 1=config error, 2=runtime error).
+    side_effects:
+      - Creates directories and files as specified in Manifest
+      - Modifies system configuration
+      - Installs DINSER CLI
+      - Sets up Docker Swarm
+    errors:
+      - condition: Manifest parse error
+        behavior: Logs error and exits with code 1
+      - condition: Module not found
+        behavior: Logs error, marks step as failed, continues
+    messages:
+      - type: stdout
+        content: Progress and status messages for each section/operation
+      - type: log
+        content: Detailed execution logs with timestamps
+---
+
+### FILE
+file_name: webui.sh
+file_type: script
+language_or_format: bash
+role: WebUI installer orchestrator that manages the Docker-based setup WebUI including building, starting, stopping, and status checking.
+used_by:
+  - dinser webui command
+  - Manual WebUI management
+depends_on:
+  - _webui.sh/Manifest
+  - _webui.sh/docker/docker-compose.webui.yml
+  - _webui.sh/docker/Dockerfile.webui
+status: active
+notes: Wrapper for Docker Compose operations specific to the WebUI.
+
+functions:
+  - name: main
+    kind: function
+    purpose: Entry point that dispatches WebUI management commands.
+    usage_examples:
+      - ./install/webui.sh manifest
+      - ./install/webui.sh up
+      - ./install/webui.sh down
+      - ./install/webui.sh status
+    parameters:
+      - name: command
+        type: enum
+        required: true
+        default: none
+        description: Command to execute.
+        allowed_values:
+          - manifest
+          - up
+          - down
+          - status
+          - restart
+          - logs
+          - build
+          - shell
+          - config-path
+    returns:
+      type: int
+      description: Exit code from Docker Compose or command execution.
+    side_effects:
+      - Starts/stops Docker containers
+      - Creates configuration directories
+      - Builds Docker images
+    errors:
+      - condition: Docker not available
+        behavior: Exits with error message
+      - condition: Container build failure
+        behavior: Logs error and exits with non-zero code
+    messages:
+      - type: stdout
+        content: Container status and command output
+---
+
+### DIRECTORIES
+subdirectories:
+  - name: _setup.sh
+    path: install/_setup.sh
+    role: Contains the base installer engine including Manifest, function modules (_mkdir.sh, _copy.sh, etc.), validators (_validate_*.sh), CLI tools (dinser), and Docker configurations.
+  - name: _webui.sh
+    path: install/_webui.sh
+    role: Contains the WebUI engine including its Manifest, FastAPI backend with modular sections, frontend with modular pages, Docker configurations, and Nginx settings.
+---

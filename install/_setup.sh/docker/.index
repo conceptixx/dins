@@ -1,0 +1,39 @@
+### META
+directory_path: install/_setup.sh/docker
+last_updated: 2025-11-28T16:30:00Z
+description: Docker configuration files for the DINS setup service container, including Dockerfile and Docker Compose configuration.
+notes: none
+---
+
+### FILE
+file_name: Dockerfile.setup
+file_type: config
+language_or_format: dockerfile
+role: Dockerfile that builds the DINS setup service container based on Alpine Linux. Installs bash, curl, jq, Docker CLI, and Python. Creates dins user/group and directories.
+used_by:
+  - docker-compose.setup.yml
+depends_on:
+  - none
+status: active
+notes: Container runs as dins user, exposes port 8080 for health checks.
+
+functions:
+  - none
+---
+
+### FILE
+file_name: docker-compose.setup.yml
+file_type: config
+language_or_format: yaml
+role: Docker Compose configuration for the DINS setup service. Defines the dins-setup container with volumes, networking, health checks, and resource limits.
+used_by:
+  - install/setup.sh
+  - dinser setup command
+depends_on:
+  - Dockerfile.setup
+status: active
+notes: Mounts /opt/dins and Docker socket, uses dins-network bridge network.
+
+functions:
+  - none
+---

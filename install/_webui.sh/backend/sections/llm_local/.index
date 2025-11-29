@@ -1,0 +1,225 @@
+### META
+directory_path: install/_webui.sh/backend/sections/llm_local
+last_updated: 2025-11-28T17:00:00Z
+description: LLM Local Providers section for the DINS WebUI. Handles local LLM provider configuration including Ollama, llama.cpp, vLLM, LocalAI, and other self-hosted inference servers.
+notes: Order 70 - in AI group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the llm_local section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "ai", order 70, router prefix "/llm/local".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for local LLM provider configuration, selection, and connection testing.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages llm.local_providers and llm.local in configuration.
+
+functions:
+  - name: get_providers
+    kind: function
+    purpose: Returns all local LLM providers from the catalog.
+    usage_examples:
+      - GET /api/llm/local/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of local provider objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_selected
+    kind: function
+    purpose: Returns selected local provider and local config.
+    usage_examples:
+      - GET /api/llm/local/selected
+    parameters:
+      - none
+    returns:
+      type: dict
+      description: Object with selected_local_provider_id, local_enabled, local_config.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: select_provider
+    kind: function
+    purpose: Selects a local provider as the default and enables local LLM.
+    usage_examples:
+      - POST /api/llm/local/select?provider_id=ollama
+    parameters:
+      - name: provider_id
+        type: string
+        required: true
+        default: none
+        description: ID of the provider to select.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status and selected provider_id.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_provider
+    kind: function
+    purpose: Updates a local provider configuration.
+    usage_examples:
+      - PUT /api/llm/local/{provider_id}
+    parameters:
+      - name: provider_id
+        type: string
+        required: true
+        default: none
+        description: ID of the provider to update.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update (enabled, base_url, model, config).
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Provider not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: add_provider
+    kind: function
+    purpose: Adds a new local provider to the configuration.
+    usage_examples:
+      - POST /api/llm/local/ {"id": "custom", "label": "Custom Server", ...}
+    parameters:
+      - name: provider
+        type: object
+        required: true
+        default: none
+        description: LocalProvider object.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: delete_provider
+    kind: function
+    purpose: Deletes a local provider from the configuration.
+    usage_examples:
+      - DELETE /api/llm/local/{provider_id}
+    parameters:
+      - name: provider_id
+        type: string
+        required: true
+        default: none
+        description: ID of the provider to delete.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Provider not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: get_enabled_providers
+    kind: function
+    purpose: Returns only enabled local providers.
+    usage_examples:
+      - GET /api/llm/local/enabled
+    parameters:
+      - none
+    returns:
+      type: list
+      description: Filtered list of enabled providers.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: test_provider
+    kind: function
+    purpose: Tests connection to a local provider.
+    usage_examples:
+      - POST /api/llm/local/{provider_id}/test
+    parameters:
+      - name: provider_id
+        type: string
+        required: true
+        default: none
+        description: ID of the provider to test.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Test result with status, reachable, message.
+    side_effects:
+      - Attempts HTTP connection to provider
+    errors:
+      - condition: Provider not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+---

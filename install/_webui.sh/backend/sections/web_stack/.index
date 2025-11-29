@@ -1,0 +1,207 @@
+### META
+directory_path: install/_webui.sh/backend/sections/web_stack
+last_updated: 2025-11-28T17:00:00Z
+description: Web Services section for the DINS WebUI. Handles web service configuration including reverse proxies (Nginx, Traefik, Kong) and web servers.
+notes: Order 95 - in services group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the web_stack section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "services", order 95, router prefix "/services/web".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing CRUD API endpoints for web service configuration with support for primary reverse proxy designation.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages services.web section of the configuration. Supports is_primary flag for main reverse proxy.
+
+functions:
+  - name: get_services
+    kind: function
+    purpose: Returns all configured web services.
+    usage_examples:
+      - GET /api/services/web/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of web service objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: add_service
+    kind: function
+    purpose: Adds a new web service to the configuration.
+    usage_examples:
+      - POST /api/services/web/ {"id": "nginx", "label": "Nginx", "is_primary": true, ...}
+    parameters:
+      - name: service
+        type: object
+        required: true
+        default: none
+        description: Service object with id, label, group, enabled, is_primary, etc.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_service
+    kind: function
+    purpose: Updates an existing web service configuration.
+    usage_examples:
+      - PUT /api/services/web/{service_id}
+    parameters:
+      - name: service_id
+        type: string
+        required: true
+        default: none
+        description: ID of the service to update.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Service not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: delete_service
+    kind: function
+    purpose: Deletes a web service from the configuration.
+    usage_examples:
+      - DELETE /api/services/web/{service_id}
+    parameters:
+      - name: service_id
+        type: string
+        required: true
+        default: none
+        description: ID of the service to delete.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Service not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: update_all_services
+    kind: function
+    purpose: Replaces all web services with the provided list.
+    usage_examples:
+      - PUT /api/services/web/
+    parameters:
+      - name: services
+        type: list
+        required: true
+        default: none
+        description: Complete list of Service objects.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: get_primary_proxy
+    kind: function
+    purpose: Returns the primary reverse proxy service.
+    usage_examples:
+      - GET /api/services/web/primary
+    parameters:
+      - none
+    returns:
+      type: object
+      description: Primary service object or null.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: set_primary_proxy
+    kind: function
+    purpose: Sets a service as the primary reverse proxy, clearing the flag from all others.
+    usage_examples:
+      - POST /api/services/web/{service_id}/set-primary
+    parameters:
+      - name: service_id
+        type: string
+        required: true
+        default: none
+        description: ID of the service to make primary.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+      - Clears is_primary from other services
+    errors:
+      - condition: Service not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+---

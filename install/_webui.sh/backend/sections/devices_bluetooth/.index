@@ -1,0 +1,132 @@
+### META
+directory_path: install/_webui.sh/backend/sections/devices_bluetooth
+last_updated: 2025-11-28T16:45:00Z
+description: Bluetooth Devices section for the DINS WebUI. Handles Bluetooth device discovery and configuration.
+notes: Order 30 - in devices group.
+---
+
+### FILE
+file_name: section.json
+file_type: config
+language_or_format: json
+role: Section metadata defining ID, label, order, group, and router configuration for the devices_bluetooth section.
+used_by:
+  - ../../app.py (section discovery)
+depends_on:
+  - none
+status: active
+notes: Group "devices", order 30, router prefix "/devices/bluetooth".
+
+functions:
+  - none
+---
+
+### FILE
+file_name: routes.py
+file_type: code
+language_or_format: python
+role: FastAPI router providing API endpoints for Bluetooth device discovery, listing, and configuration.
+used_by:
+  - ../../app.py (dynamic router loading)
+depends_on:
+  - dins_config.json
+status: active
+notes: Manages devices.bluetooth section of the configuration.
+
+functions:
+  - name: get_devices
+    kind: function
+    purpose: Returns all configured Bluetooth devices.
+    usage_examples:
+      - GET /api/devices/bluetooth/
+    parameters:
+      - none
+    returns:
+      type: list
+      description: List of Bluetooth device objects.
+    side_effects:
+      - Reads config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: scan_devices
+    kind: function
+    purpose: Scans for Bluetooth devices using bluetoothctl or similar.
+    usage_examples:
+      - POST /api/devices/bluetooth/scan
+    parameters:
+      - none
+    returns:
+      type: dict
+      description: Status, devices_found count, and list of devices.
+    side_effects:
+      - Executes Bluetooth scan commands
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+
+  - name: update_device
+    kind: function
+    purpose: Updates a Bluetooth device configuration.
+    usage_examples:
+      - PUT /api/devices/bluetooth/{device_id}
+    parameters:
+      - name: device_id
+        type: string
+        required: true
+        default: none
+        description: ID of the device to update.
+        allowed_values:
+          - none
+      - name: update
+        type: object
+        required: true
+        default: none
+        description: Fields to update (enabled, label).
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: Device not found
+        behavior: Returns HTTP 404
+    messages:
+      - type: log
+        content: none
+
+  - name: update_all_devices
+    kind: function
+    purpose: Replaces all Bluetooth devices with the provided list.
+    usage_examples:
+      - PUT /api/devices/bluetooth/
+    parameters:
+      - name: devices
+        type: list
+        required: true
+        default: none
+        description: Complete list of BluetoothDevice objects.
+        allowed_values:
+          - none
+    returns:
+      type: dict
+      description: Status response.
+    side_effects:
+      - Writes to config file
+    errors:
+      - condition: unknown
+        behavior: unknown
+    messages:
+      - type: log
+        content: none
+---

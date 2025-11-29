@@ -1,0 +1,35 @@
+### META
+directory_path: testsuite/module_web
+description: Web testing module for DINS HTTP endpoints per PART5
+created: 2025-01-28
+modified: 2025-01-28
+status: active
+
+### FILES
+test_module_web.py | Main web test module with run_tests() function
+README.md | Module documentation and usage instructions
+
+### OFFLINE_TESTS
+test_static_files_exist | Verifies static web assets exist
+test_html_structure | Validates HTML structure
+test_css_syntax | Validates CSS syntax
+test_js_syntax | Validates JavaScript syntax
+test_nginx_config_exists | Verifies nginx configuration
+test_api_routes_defined | Checks backend API routes
+
+### ONLINE_TESTS
+test_server_reachable | Tests server connectivity
+test_root_page_accessible | Tests root page returns 200
+test_api_health_endpoint | Tests health check API
+test_api_sections_endpoint | Tests sections API endpoint
+test_404_handling | Tests error page handling
+
+### DEPENDENCIES
+testsuite.py | Main test suite framework
+urllib.request | Python HTTP client
+socket | Network connectivity checks
+
+### NOTES
+Offline tests always run without network.
+Online tests are skipped if no server is available.
+All tests are non-destructive per PART5 specification.

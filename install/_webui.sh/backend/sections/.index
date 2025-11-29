@@ -1,0 +1,41 @@
+### META
+directory_path: install/_webui.sh/backend/sections
+description: Modular configuration section directories for DINS WebUI backend
+created: 2025-01-28
+modified: 2025-11-29
+status: active
+notes: Sections are auto-discovered by app.py at startup. Each section must have routes.py and section.json.
+
+### DIRECTORIES
+admin_security/ | Admin authentication, password setup, security settings
+audio_stack/ | Audio service stack configuration
+cluster_swarm/ | Docker Swarm cluster configuration
+devices_audio/ | Audio device discovery and configuration
+devices_bluetooth/ | Bluetooth device discovery and pairing
+devices_other/ | Other device types configuration
+devices_video/ | Video/camera device configuration
+enhancements_stack/ | Enhancement services configuration
+llm_cloud/ | Cloud LLM provider configuration
+llm_local/ | Local LLM provider configuration
+mobile_stack/ | Mobile app integration configuration
+network_ssh/ | Network scanning and SSH node discovery
+nodes_selection/ | Node selection and role assignment
+services/ | Swarm service management per PART 9
+stt_engine/ | Speech-to-Text engine selection and configuration
+stt_input/ | STT input sources and microphone configuration
+tts_routing/ | Text-to-Speech output routing configuration
+vpn_mesh_stack/ | VPN and mesh networking configuration
+web_stack/ | Web services stack configuration
+
+### SECTION_STRUCTURE
+Each section directory contains:
+- section.json: Metadata (id, title, order, category)
+- routes.py: Flask blueprint with API routes
+- .index: Section documentation
+
+### AUTO_DISCOVERY
+app.py discovers sections by:
+1. Scanning this directory for subdirectories
+2. Loading section.json for metadata
+3. Importing routes.py blueprints
+4. Registering under /api/<section_id>/

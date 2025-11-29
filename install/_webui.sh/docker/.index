@@ -1,0 +1,83 @@
+### META
+directory_path: install/_webui.sh/docker
+last_updated: 2025-11-28T16:30:00Z
+description: Docker configuration files for the DINS WebUI container including Dockerfile, Docker Compose, entrypoint script, and Nginx configuration.
+notes: Container runs FastAPI backend on port 8080 (internal) and Nginx on port 80 (exposed).
+---
+
+### FILE
+file_name: Dockerfile.webui
+file_type: config
+language_or_format: dockerfile
+role: Dockerfile that builds the DINS WebUI container based on Python 3.11 slim. Installs Nginx, FastAPI, Uvicorn, and Pydantic. Copies backend, frontend, and Nginx configuration.
+used_by:
+  - docker-compose.webui.yml
+depends_on:
+  - ../backend/
+  - ../frontend/
+  - nginx.d/dins-setup.conf
+status: active
+notes: Exposes port 80, includes health check on /api/health.
+
+functions:
+  - none
+---
+
+### FILE
+file_name: docker-compose.webui.yml
+file_type: config
+language_or_format: yaml
+role: Docker Compose configuration for the DINS WebUI service. Defines the dins-setup container with volume mounts for config, logs, secrets, and Docker socket.
+used_by:
+  - install/webui.sh
+depends_on:
+  - Dockerfile.webui
+status: active
+notes: Exposes port 80, resource limits 1 CPU / 512MB memory.
+
+functions:
+  - none
+---
+
+### FILE
+file_name: entrypoint.sh
+file_type: script
+language_or_format: bash
+role: Container entrypoint script that ensures directories exist, sets permissions, starts Uvicorn backend, waits for it to be ready, then starts Nginx in foreground.
+used_by:
+  - Dockerfile.webui
+depends_on:
+  - ../backend/app.py
+status: active
+notes: Waits up to 30 seconds for backend health check before starting Nginx.
+
+functions:
+  - name: main
+    kind: function
+    purpose: Entry point that initializes container, starts backend, and runs Nginx.
+    usage_examples:
+      - Called automatically as container ENTRYPOINT
+    parameters:
+      - none
+    returns:
+      type: int
+      description: Exit code from Nginx process.
+    side_effects:
+      - Creates directories
+      - Sets file permissions
+      - Starts Uvicorn process
+      - Starts Nginx process
+    errors:
+      - condition: Backend fails to start
+        behavior: Prints error and exits with code 1
+    messages:
+      - type: stdout
+        content: Startup progress messages
+---
+
+### DIRECTORIES
+subdirectories:
+  - name: nginx.d
+    path: install/_webui.sh/docker/nginx.d
+    role: Nginx configuration files for the WebUI.
+---

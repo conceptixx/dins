@@ -1,0 +1,28 @@
+### META
+directory_path: services/_example
+description: Example service template demonstrating canonical DINS service structure per PART 9
+created: 2025-11-29
+modified: 2025-11-29
+status: template
+
+### PURPOSE
+This is a TEMPLATE service - not deployable.
+Copy this directory to create new services.
+
+### FILES
+service.yaml | Service descriptor - defines name, type, image, runtime, secrets
+Dockerfile | Container build file for local-build mode
+
+### DIRECTORIES
+src/ | Source code directory
+config/ | Default configuration templates (non-secret)
+docs/ | Service documentation
+tests/ | Service-specific tests
+
+### REQUIRED_FOR_NEW_SERVICE
+1. service.yaml (always required)
+2. Dockerfile (if image.mode: local-build)
+3. docs/README.md (recommended)
+
+### COPY_TO_CREATE_SERVICE
+cp -r services/_example services/<new-service-name>

@@ -1,0 +1,35 @@
+### META
+directory_path: state
+description: DINS setup state tracking per PART 6.1
+created: 2025-01-28
+modified: 2025-01-28
+status: active
+
+### PURPOSE
+This directory contains state files for tracking setup progress.
+In production, the primary state file is /var/lib/dins/setup_state.
+This directory serves as documentation and development reference.
+
+### FILES
+setup_state.example | Example state file format documentation
+
+### STATE_FILE_FORMAT
+Line format: phaseN:step_id:status
+Status values:
+- start: Step execution began
+- completed: Step finished successfully
+- warning: Step completed with warnings
+- skipped: Step was intentionally skipped
+- not_assigned: Step not applicable to this environment
+
+### PHASE_ORDER
+Phase 1: Runtime Environment Setup
+Phase 2: DINSER CLI Installation
+Phase 3: System Preparation
+Phase 4: Docker Swarm Setup
+Phase 5: Setup Docker Service Deployment
+Phase 6: Final Setup Routine
+
+### RELATED
+install/setup.sh | Main setup script that writes state
+install/_setup.sh/cli/dinser | CLI that reads state for resume
